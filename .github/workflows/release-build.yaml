@@ -45,7 +45,7 @@ jobs:
       - name: Pyinstaller build
         id: pyinstaller_build
         run: |
-          pyinstaller tui.spec
+          uv run pyinstaller tui.spec
           exepath=$(python -c "import os; print(','.join(os.listdir(os.path.join(os.getcwd(), 'dist'))))")
           echo "exepath=$exepath" >> $GITHUB_OUTPUT
 
