@@ -1,0 +1,24 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+__pypy_cache__/
+
+# Virtual environments
+.venv
+
+# tool cache
+.mypy_cache/
+.ruff_cache/
+
+# test cache
+.pytest_cache/
+
+# log
+.logs/
+
+password_data.json

@@ -1,0 +1,15 @@
+[project]
+name = "positive-password-book"
+version = "0.1.0"
+description = "`positive_password_book`"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "typer>=0.20.1",
+    "pyside6>=6.10.1",
+    "typing-extensions>=4.15.0",
+    "positive_tool @ https://github.com/TW0hank0/positive_tool/releases/download/v0.5.0/positive_tool-0.5.0-py3-none-any.whl",
+]
+
+[project.optional-dependencies]
+tui = ["rich>=14.2.0"]
