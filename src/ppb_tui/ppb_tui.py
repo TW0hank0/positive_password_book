@@ -9,6 +9,7 @@ from rich.style import Style
 from rich.text import Text
 from rich.prompt import Prompt, PromptBase
 from rich.rule import Rule
+from rich.layout import Layout
 
 from positive_tool import pt
 
@@ -62,6 +63,7 @@ class PasswordBook:
         )
         self.left_change_unsave: bool = False
         self.content_per_page = self.console.size.height - 8 - 3
+        self.page_num = 1
         #
         self.get_backend_data()
         #
@@ -76,7 +78,7 @@ class PasswordBook:
     def backend_save_data(self):
         self.backend.password_book_save(self.data_file_path)
 
-    def print_data(self):
+    def print_data_old(self):
         self.console.clear()
         if self.data is None:
             self.get_backend_data()
@@ -102,6 +104,36 @@ class PasswordBook:
             )
         )
 
+    def print_data(self):
+        self.console.clear()
+        if self.data is None:
+            self.get_backend_data()
+        if hasattr(self, "pages") is False:
+            self.refresh()
+        # data = self.backend.password_book_get_data()
+        table = Table()
+        header_style = Style(color="blue")
+        table.add_column("應用程式", min_width=15, header_style=header_style)
+        table.add_column("帳號", min_width=20, header_style=header_style)
+        table.add_column("密碼", min_width=20, header_style=header_style)
+        table.add_column("user_note", header_style=header_style, min_width=10)
+        table.add_column("note", header_style=header_style, min_width=10)
+        for app, app_data in self.pages[self.page_num - 1]:  # type: ignore
+            if app == "trash_can":
+                continue
+            else:
+                table.add_row(app, app_data["acc"], app_data["pwd"])
+        layout = Layout()
+        layout.add_split(Layout(table))
+        layout.add_split(Layout(Text(f"第{self.page_num}頁，共{self.page_max_num}頁")))
+        self.console.print(
+            Panel(
+                layout,
+                title=Text(PROJECT_NAME, style=Style(color="purple", bold=True)),
+                height=self.console.size.height - 3,
+            )
+        )
+
     def refresh(self):
         if self.data is None:
             self.get_backend_data()
@@ -120,6 +152,8 @@ class PasswordBook:
                 count = 1
             else:
                 count += 1
+        self.page_num = 1
+        self.page_max_num = len(self.pages)
 
     def close(self):
         self.backend_save_data()

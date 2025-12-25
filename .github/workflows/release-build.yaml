@@ -1,0 +1,86 @@
+name: build-and-upload-release
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        #os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
+        python: [cpython-3.13]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install Python with uv
+        run: uv python install ${{ matrix.python }}
+
+      - name: Create venv
+        run: uv venv
+
+      - name: Install project dependencies with uv
+        run: uv sync --all-extras
+
+      - name: Build distribution
+        run: uv build
+
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.os }}-${{ matrix.python }}
+          path: dist/*
+
+      - name: Pyinstaller build
+        id: pyinstaller_build
+        run: |
+          pyinstaller tui.spec
+          exepath=$(python -c "import os; print(','.join(os.listdir(os.path.join(os.getcwd(), 'dist'))))")
+          echo "exepath=$exepath" >> $GITHUB_OUTPUT
+
+      - name: Upload pyinstaller built artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppb*
+          path: dist/*
+
+  upload:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Upload artifacts to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPLOAD_URL: ${{ github.event.release.upload_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          upload_url="${UPLOAD_URL%\{*}"
+          echo "Uploading artifacts to $upload_url"
+          shopt -s globstar || true
+          for f in artifacts/**; do
+            if [ -f "$f" ]; then
+              echo "Uploading $f"
+              curl -sS -X POST \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                -H "Content-Type: application/octet-stream" \
+                --data-binary @"$f" \
+                "$upload_url?name=$(basename "$f")"
+            fi
+          done
