@@ -15,12 +15,12 @@ PROJECT_NAME = "positive_password_book"
 if hasattr(sys, "_MEIPASS") is True:
     project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(sys.executable))
 else:
-    project_path = pt.find_project_path(PROJECT_NAME, __file__)
+    project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(__file__))
 app_cli = typer.Typer(name=PROJECT_NAME)
 
 
 @app_cli.command()
-def main(app_mode: Literal["tui", "gui"] = "gui"):
+def main(app_mode: Literal["tui", "gui"] = "tui"):
     log_dir = os.path.join(project_path, ".logs")
     if os.path.exists(log_dir) is False or os.path.isdir(log_dir) is False:
         os.mkdir(log_dir)
@@ -32,12 +32,12 @@ def main(app_mode: Literal["tui", "gui"] = "gui"):
         raise RuntimeError("日志系統初始化失敗！")
     if app_mode == "gui":
         logger.info("啟動GUI")
-        from ..ppb_gui import ppb_gui
+        from ..ppb_gui import ppb_gui  # ty:ignore[unresolved-import]
 
         ppb_gui.main(logger)
     elif app_mode == "tui":
         logger.info("啟動TUI")
-        from ..ppb_tui import ppb_tui
+        from ..ppb_tui import ppb_tui  # ty:ignore[unresolved-import]
 
         try:
             ppb_tui.main(logger)

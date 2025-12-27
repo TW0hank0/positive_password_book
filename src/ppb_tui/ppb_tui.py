@@ -1,5 +1,8 @@
+import time
 import os
 import sys
+import logging
+
 from typing import List
 
 from rich.console import Console
@@ -7,13 +10,14 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.style import Style
 from rich.text import Text
-from rich.prompt import Prompt, PromptBase
+from rich.prompt import Prompt, PromptBase, Confirm
 from rich.rule import Rule
 from rich.layout import Layout
+from rich.tree import Tree
 
 from positive_tool import pt
 
-from ..ppb_backend import password_book_system
+from ..ppb_backend import ppb_backend  # ty:ignore[unresolved-import]
 
 PROJECT_NAME = "positive_password_book"
 project_path = pt.find_project_path(PROJECT_NAME)
@@ -26,7 +30,7 @@ class PPBActionPrompt(PromptBase[str]):
         *,
         console: Console | None = None,
         password: bool = False,
-        choices: List[str] | None = None,
+        choices: List[str] | None = ["新增", "刪除", "離開"],
         case_sensitive: bool = True,
         show_default: bool = True,
         show_choices: bool = True,
@@ -40,40 +44,50 @@ class PPBActionPrompt(PromptBase[str]):
             show_default=show_default,
             show_choices=show_choices,
         )
-        self.choices: list = ["新增", "刪除", "離開"]
+        # self.choice: list[str] = ["新增", "刪除", "離開"]
 
     def process_response(self, value: str) -> str:
-        if value in self.choices:
+        if value in self.choices or value in ["debug"]:  # type: ignore
             return value
         else:
-            raise ValueError(f"在{len(self.choices)}個動作中選擇一個動作！")
+            raise ValueError(f"在{len(self.choices)}個動作中選擇一個動作！")  # type: ignore
 
     def check_choice(self, value: str) -> bool:
-        return value in self.choices
+        return value in self.choices  # type: ignore
 
 
 class PasswordBook:
-    def __init__(self, logger) -> None:
+    def __init__(self, logger: logging.Logger) -> None:
         self.console = Console()
-        self.logger = logger
-        self.backend = password_book_system.PasswordBookSystem()
-        self.data: dict | None = None
+        self.logger: logging.Logger = logger
+        self.backend = ppb_backend.PasswordBookSystem()
+        self.data: dict = {}
+        self.pages: list = []
         self.data_file_path = os.path.abspath(
             os.path.join(project_path, "password_data.json")
         )
+        if (
+            os.path.exists(self.data_file_path) is True
+            and os.path.isfile(self.data_file_path) is True
+        ):
+            self.backend.password_book_load(self.data_file_path)
         self.left_change_unsave: bool = False
         self.content_per_page = self.console.size.height - 8 - 3
-        self.page_num = 1
+        self.page_num = 0
+        self.page_max_num = 0
         #
+        self.backend.password_book_new()
         self.get_backend_data()
+        self.refresh_page()
         #
         self.print_data()
         self.main()
 
     def get_backend_data(self):
-        if self.data is None:
-            self.backend.password_book_new()
-            self.data = self.backend.password_book_get_data()
+        # if self.data is None:
+        # self.backend.password_book_new()
+        self.data = self.backend.password_book_get_data()
+        self.refresh_page()
 
     def backend_save_data(self):
         self.backend.password_book_save(self.data_file_path)
@@ -105,12 +119,17 @@ class PasswordBook:
         )
 
     def print_data(self):
+        #
         self.console.clear()
         if self.data is None:
             self.get_backend_data()
-        if hasattr(self, "pages") is False:
-            self.refresh()
-        # data = self.backend.password_book_get_data()
+        # if hasattr(self, "pages") is False:
+        # self.refresh_page()
+        #
+        self.logger.debug(f"所有分頁： {self.pages}")
+        self.logger.debug(f"資料： {self.data}")
+        self.logger.debug(f"總頁數： {self.page_max_num}")
+        #
         table = Table()
         header_style = Style(color="blue")
         table.add_column("應用程式", min_width=15, header_style=header_style)
@@ -118,11 +137,13 @@ class PasswordBook:
         table.add_column("密碼", min_width=20, header_style=header_style)
         table.add_column("user_note", header_style=header_style, min_width=10)
         table.add_column("note", header_style=header_style, min_width=10)
-        for app, app_data in self.pages[self.page_num - 1]:  # type: ignore
-            if app == "trash_can":
-                continue
-            else:
-                table.add_row(app, app_data["acc"], app_data["pwd"])
+        if len(self.pages) > 0 and self.page_max_num > 0:
+            for app, app_data in self.pages[self.page_num - 1]:
+                self.logger.debug(f"app:{app}, app_data:{app_data}")
+                if app == "trash_can":
+                    continue
+                else:
+                    table.add_row(app, app_data["acc"], app_data["pwd"])
         layout = Layout()
         layout.add_split(Layout(table))
         layout.add_split(Layout(Text(f"第{self.page_num}頁，共{self.page_max_num}頁")))
@@ -134,33 +155,39 @@ class PasswordBook:
             )
         )
 
-    def refresh(self):
+    def refresh_page(self):
         if self.data is None:
             self.get_backend_data()
-        page_app_datas = []
-        self.pages = []
-        for app, app_datas in list(self.data.items()):  # type: ignore
-            for app_data in app_datas:
-                page_app_datas.append({"app": app, "app_data": app_data})
+        #
+        self.logger.debug(f"每頁內容數： {self.content_per_page}")
+        self.logger.debug(f"資料： {self.data}")
+        #
+        self.pages.clear()
+        # self.page_num = 1
+        # self.page_max_num = 0
         count = 1
-        page = []
-        for i in page_app_datas:
-            page.append(i)
-            if count >= self.content_per_page:
-                self.pages.append(page)
-                page.clear()
-                count = 1
-            else:
-                count += 1
+        page: list = []
+        for app in list(self.data.keys()):
+            app_datas = self.data[app]
+            for app_data in app_datas:
+                page.append((app, app_data))
+                if count >= self.content_per_page:
+                    self.pages.append(page)
+                    page.clear()
+                    count = 1
+                else:
+                    count += 1
+        if len(page) > 0:
+            self.pages.append(page)
+            page.clear()
         self.page_num = 1
         self.page_max_num = len(self.pages)
 
     def close(self):
         self.backend_save_data()
-        # self.console.print(f"退出 {PROJECT_NAME}")
         sys.exit(0)
 
-    def insert_data(self):
+    def insert_appdata(self):
         self.console.clear()
         self.console.print(
             Rule(
@@ -173,9 +200,26 @@ class PasswordBook:
         app_name = Prompt.ask("應用程式")
         acc = Prompt.ask("帳號")
         pwd = Prompt.ask("密碼")
-        self.backend.password_book_insert(app_name, acc, pwd)
-        self.backend_save_data()
-        # self.get_backend_data()
+        #
+        key_style = Style(color="blue")
+        value_style = Style(color="yellow")
+        tree = Tree(app_name, style=key_style)
+        tree.add("帳號：", style=key_style).add(acc, style=value_style)
+        tree.add("密碼：", style=key_style).add(pwd, style=value_style)
+        # self.console.print(Text("應用程式：", style=key_style, end=""), end="\n")
+        # self.console.print(Text(app_name, style=value_style, end=""), end="\n")
+        # self.console.print(Text("帳號：", style=key_style))
+        # self.console.print(Text(acc, style=value_style, end=""), end="\n")
+        # self.console.print(Text("密碼：", style=key_style))
+        # self.console.print(Text(pwd, style=value_style, end=""), end="\n")
+        self.console.print(tree)
+        if Confirm.ask("是否正確： ", console=self.console):
+            self.backend.password_book_insert(app_name, acc, pwd)
+            self.backend_save_data()
+            self.get_backend_data()
+        else:
+            self.console.print("已取消新增！")
+            time.sleep(1.5)
 
     def main(self):
         while True:
@@ -185,6 +229,7 @@ class PasswordBook:
                     user_action = PPBActionPrompt.ask(
                         "輸入動作",
                         console=self.console,
+                        choices=["新增", "刪除", "離開", "r"],
                     )
                 except ValueError as e:
                     self.print_data()
@@ -197,8 +242,24 @@ class PasswordBook:
             if user_action == "離開":
                 break
             elif user_action == "新增":
-                self.insert_data()
+                self.insert_appdata()
+            elif user_action == "r":
+                self.get_backend_data()
+                self.refresh_page()
+                self.console.print(self)
         self.close()
+
+    def __str__(self) -> str:
+        return f"""PasswordBook(
+    pages={self.pages},
+    page_num={self.page_num},
+    page_max_num={self.page_max_num},
+    content_per_page={self.content_per_page},
+    data={self.data},
+    data_file_path={self.data_file_path},
+    backend={self.backend}
+)
+"""
 
 
 def main(logger):

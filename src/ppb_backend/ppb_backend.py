@@ -1,4 +1,5 @@
 import json
+
 from positive_tool.arg import ArgType
 
 
@@ -13,7 +14,7 @@ class PasswordBookSystem:
     def password_book_new(self):
         # ArgType("file_path", file_path, str, is_exists=False, is_file=True)
         #
-        self._data = {"trash_can": [{}]}
+        self._data = {"trash_can": []}
 
     def password_book_load(self, file_path: str):
         ArgType("file_path", file_path, str, is_exists=True, is_file=True)
@@ -22,9 +23,9 @@ class PasswordBookSystem:
             file_data: dict = json.load(f)
         if type(file_data) is not dict:
             raise TypeError()
-        for i in file_data.keys():
-            if type(i) is not str or type(file_data[i]) is not str:
-                raise TypeError()
+        # for i in file_data.keys():
+        # if type(i) is not str or type(file_data[i]) is not list:
+        # raise TypeError()
         self._data = file_data
 
     def password_book_save(self, file_path: str):
@@ -32,7 +33,7 @@ class PasswordBookSystem:
             raise TypeError()
         #
         with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(self._data, f, ensure_ascii=False, sort_keys=True)
+            json.dump(self._data, f, ensure_ascii=False, indent=4)
 
     def password_book_insert(
         self, app_name: str, acc: str, pwd: str, *, note: str = "", user_note: str = ""
@@ -48,7 +49,7 @@ class PasswordBookSystem:
         #
         app_data = {"acc": acc, "pwd": pwd, "note": note, "user_note": user_note}
         app_exists: bool = False
-        for i in self._data.keys():
+        for i in list(self._data.keys()):
             if app_name == i:
                 app_exists = True
                 break
@@ -80,5 +81,8 @@ class PasswordBookSystem:
             else:
                 raise IndexError()
 
-    def password_book_get_data(self) -> dict | None:
+    def password_book_get_data(self) -> dict:
         return self._data
+
+    def __str__(self) -> str:
+        return f"""PasswordBookSystem(_data={self._data})"""
