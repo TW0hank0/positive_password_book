@@ -1,3 +1,4 @@
+import json
 import time
 import os
 import sys
@@ -66,17 +67,20 @@ class PasswordBook:
         self.data_file_path = os.path.abspath(
             os.path.join(project_path, "password_data.json")
         )
-        if (
-            os.path.exists(self.data_file_path) is True
-            and os.path.isfile(self.data_file_path) is True
-        ):
-            self.backend.password_book_load(self.data_file_path)
+        if os.path.isfile(self.data_file_path) is True:
+            try:
+                self.backend.password_book_load(self.data_file_path)
+            except json.JSONDecodeError:
+                self.console.print("檔案格式錯誤！")
+                self.console.print_exception(show_locals=True)
+                sys.exit(1)
+        else:
+            self.backend.password_book_new()
         self.left_change_unsave: bool = False
         self.content_per_page = self.console.size.height - 8 - 3
         self.page_num = 0
         self.page_max_num = 0
         #
-        self.backend.password_book_new()
         self.get_backend_data()
         self.refresh_page()
         #
@@ -120,9 +124,9 @@ class PasswordBook:
 
     def print_data(self):
         #
-        self.console.clear()
-        if self.data is None:
-            self.get_backend_data()
+        # self.console.clear()
+        # if self.data is None:
+        # self.get_backend_data()
         # if hasattr(self, "pages") is False:
         # self.refresh_page()
         #
@@ -161,6 +165,7 @@ class PasswordBook:
         #
         self.logger.debug(f"每頁內容數： {self.content_per_page}")
         self.logger.debug(f"資料： {self.data}")
+        self.logger.debug(f"資料keys： {list(self.data.keys())}")
         #
         self.pages.clear()
         # self.page_num = 1
@@ -168,20 +173,26 @@ class PasswordBook:
         count = 1
         page: list = []
         for app in list(self.data.keys()):
+            self.logger.debug(f"key -> app： {app}")
             app_datas = self.data[app]
+            self.logger.debug(f"value -> app_datas： {app_datas}")
             for app_data in app_datas:
                 page.append((app, app_data))
+                self.logger.debug(f"page： {page}")
                 if count >= self.content_per_page:
-                    self.pages.append(page)
+                    self.pages.append(page.copy())
+                    self.logger.debug(f"pages -> self.pages： {self.pages}")
                     page.clear()
                     count = 1
                 else:
                     count += 1
+        self.logger.debug(f"page： {page}")
         if len(page) > 0:
-            self.pages.append(page)
+            self.pages.append(page.copy())
             page.clear()
         self.page_num = 1
         self.page_max_num = len(self.pages)
+        self.logger.debug(f"pages -> self.pages： {self.pages}")
 
     def close(self):
         self.backend_save_data()
@@ -221,32 +232,69 @@ class PasswordBook:
             self.console.print("已取消新增！")
             time.sleep(1.5)
 
+    def delete_appdata(self):
+        self.console.clear()
+        self.console.print(
+            Rule(
+                Text(PROJECT_NAME, style=Style(color="purple"))
+                + Text(" ─ ", style=Style(dim=True, color="yellow", bold=True))
+                + Text("刪除", style=Style(color="green")),
+                style="bright_blue",
+            )
+        )
+
     def main(self):
+        is_user_input_error = False
+        self.console.clear()
         while True:
-            self.print_data()
             while True:
+                self.console.clear()
+                self.print_data()
+                if is_user_input_error is True:
+                    self.console.print(
+                        "輸入錯誤：請從[bold]4[/bold]個動作中選擇一個！",
+                        style=Style(blink=True, underline=True, color="red"),
+                    )
+                    is_user_input_error = False
+                self.console.print(
+                    "輸入動作",
+                    Text(
+                        "〔新增, 刪除, 離開, 重新整理〕",
+                        style=Style(color="bright_magenta"),
+                    ),
+                    end="",
+                )
                 try:
                     user_action = PPBActionPrompt.ask(
-                        "輸入動作",
                         console=self.console,
-                        choices=["新增", "刪除", "離開", "r"],
+                        show_choices=False,
+                        choices=[
+                            "新增",
+                            "i",
+                            "刪除",
+                            "d",
+                            "離開",
+                            "q",
+                            "重新整理",
+                            "q",
+                        ],
                     )
-                except ValueError as e:
-                    self.print_data()
-                    self.console.print(
-                        f"[red]輸入錯誤：[/red][bright_red] {e}[/bright_red]",
-                        style=Style(blink=True, underline=True),
-                    )
+                except ValueError:
+                    # self.print_data()
+                    is_user_input_error = True
                 else:
                     break
-            if user_action == "離開":
-                break
-            elif user_action == "新增":
+            if user_action in ["新增", "i"]:
                 self.insert_appdata()
-            elif user_action == "r":
+            elif user_action in ["刪除", "d"]:
+                self.console.print("未完成功能！")
+                time.sleep(2)
+            elif user_action in ["離開", "q"]:
+                break
+            elif user_action in ["重新整理", "r"]:
                 self.get_backend_data()
                 self.refresh_page()
-                self.console.print(self)
+                # self.console.print(self)
         self.close()
 
     def __str__(self) -> str:
