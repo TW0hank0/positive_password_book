@@ -89,14 +89,14 @@ jobs:
           ls -la dist || true
 
       - name: Get short SHA (Linux)
-        id: get_sha
+        id: get_sha_linux
         if: runner.os == 'Linux'
         run: |
           short=$(uv run ci/get_sha.py $GITHUB_SHA)
           echo "short_sha=$short" >> $GITHUB_OUTPUT
 
       - name: Get short SHA (Windows)
-        id: get_sha
+        id: get_sha_windows
         if: runner.os == 'Windows'
         run: |
           $short = uv run ci/get_sha.py $GITHUB_SHA
@@ -136,8 +136,8 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ steps.get_version_linux.outputs.version }}-pre-${{ steps.get_sha.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
-          name: pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_sha.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
+          tag: v${{ steps.get_version_linux.outputs.version }}-pre-${{ steps.get_sha_linux.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
+          name: pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_sha_linux.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
           prerelease: true
           artifacts: ${{ steps.rename_exe_linux.outputs.exe_path }}
           body: |
@@ -145,14 +145,14 @@ jobs:
             - 系統： ${{ matrix.os }}
             - 版本： ${{ steps.get_version_linux.outputs.version }}
             - 時間： ${{ steps.get_datetime.outputs.datetime }}
-            - github_sha： ${{ steps.get_sha.outputs.short_sha }}
+            - github_sha： ${{ steps.get_sha_linux.outputs.short_sha }}
 
       - name: Create prerelease and upload wheel (Windows)
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ steps.get_version_windows.outputs.version }}-pre-${{ steps.get_sha.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
-          name: pre-release+${{ steps.get_version_windows.outputs.version }}+${{ steps.get_sha.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
+          tag: v${{ steps.get_version_windows.outputs.version }}-pre-${{ steps.get_sha_windows.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
+          name: pre-release+${{ steps.get_version_windows.outputs.version }}+${{ steps.get_sha_windows.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
           prerelease: true
           artifacts: ${{ steps.rename_exe_windows.outputs.exe_path }}
           body: |
@@ -160,4 +160,4 @@ jobs:
             - 系統： ${{ matrix.os }}
             - 版本： ${{ steps.get_version_windows.outputs.version }}
             - 時間： ${{ steps.get_datetime.outputs.datetime }}
-            - github_sha： ${{ steps.get_sha.outputs.short_sha }}
+            - github_sha： ${{ steps.get_sha_windows.outputs.short_sha }}
