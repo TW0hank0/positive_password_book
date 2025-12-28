@@ -1,3 +1,4 @@
+from click.core import V
 import json
 import time
 import os
@@ -15,9 +16,9 @@ from rich.prompt import Prompt, PromptBase, Confirm
 from rich.rule import Rule
 from rich.layout import Layout
 from rich.tree import Tree
+from rich.align import Align
 
 # from rich.padding import Padding
-from rich.align import Align
 from rich.containers import Renderables
 
 
@@ -63,9 +64,10 @@ class PPBActionPrompt(PromptBase[str]):
 
 
 class PasswordBook:
-    def __init__(self, logger: logging.Logger) -> None:
+    def __init__(self, logger: logging.Logger, version) -> None:
         self.console = Console()
         self.logger: logging.Logger = logger
+        self.version = version
         self.backend = ppb_backend.PasswordBookSystem()
         self.data: dict = {}
         self.pages: list = []
@@ -156,12 +158,31 @@ class PasswordBook:
         layout = Layout()
         layout.add_split(Layout(table))
         # layout.add_split(Layout(Text(f"第{self.page_num}頁，共{self.page_max_num}頁")))
-        version_info = Text()
         page_info = Text(
-            f"第{self.page_num}頁，共{self.page_max_num}頁", style="italic"
+            f"第{self.page_num}頁，共{self.page_max_num}頁", style="", end=""
         )
-        infos = Renderables([page_info])
-        content = Renderables([infos, table])
+        version_text = f"版本： {self.version}"
+        version_info = Text(
+            (
+                " "
+                * (
+                    int(
+                        (
+                            self.console.size.width
+                            - 4
+                            - (len(str(page_info)) + 5)
+                            - (len(version_text) + 3)
+                        )
+                        / 2
+                    )
+                    - int((len(version_text) + 3) / 2)
+                )
+            )
+            + version_text
+        )
+        info_rule = Rule(style=Style(color="green", dim=True))
+        infos = Renderables([page_info, version_info])
+        content = Renderables([infos, info_rule, table])
         # 建立內容組合
         # content = Renderables(
         # [table, Align(page_info, align="right", vertical="bottom")]
@@ -399,13 +420,15 @@ class PasswordBook:
 """
 
 
-def main(logger):
-    PasswordBook(logger)
+def main(logger, version):
+    PasswordBook(logger, version)
 
 
 def launcher():
     import os
     import datetime
+
+    from ... import positive_password_book
 
     log_dir = os.path.join(project_path, ".logs")
     if os.path.exists(log_dir) is False or os.path.isdir(log_dir) is False:
@@ -414,7 +437,7 @@ def launcher():
     time_format_str = time_now.strftime("%Y-%d-%m_%H-%M-%S")
     log_file_path = os.path.join(log_dir, f"log_{time_format_str}.log")
     logger = pt.build_logger(log_file_path, f"{PROJECT_NAME}_logger")
-    main(logger)
+    main(logger, positive_password_book.__version__)
 
 
 if __name__ == "__main__":
