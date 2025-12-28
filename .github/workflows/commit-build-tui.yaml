@@ -88,6 +88,8 @@ jobs:
         run: |
           echo "PWD: $(pwd)"
           ls -la dist || true
+          echo '---'
+          ls
 
       - name: Get short SHA (Linux)
         id: get_sha_linux
