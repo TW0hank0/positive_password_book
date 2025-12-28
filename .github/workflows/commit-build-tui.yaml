@@ -94,7 +94,7 @@ jobs:
           exho "exe_path=$exe_path" >> $GITHUB_OUTPUT
 
       - name: Rename exe to include version (Windows)
-        id: rename_exe_linux
+        id: rename_exe_windows
         if: runner.os == 'Windows'
         shell: pwsh
         env:
