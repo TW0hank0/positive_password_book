@@ -60,7 +60,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $version = python -c "import tomllib; d=tomllib.load(open('pyproject.toml','rb')); v = d.get('project', {}).get('version') or d.get('tool', {}).get('poetry', {}).get('version'); print(v)"
+          cd ci
+          uv venv --python cpython-3.13
+          $version = uv run get_version.py
           echo "Version: $version"
           echo "PACKAGE_VERSION=$version" >> $env:GITHUB_ENV
 
@@ -91,7 +93,7 @@ jobs:
           VER: ${{ steps.get_version_linux.outputs.version }}
         run: |
           exe_path=$(python ci/rename_exe.py $ORIG $VER)
-          exho "exe_path=$exe_path" >> $GITHUB_OUTPUT
+          echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
 
       - name: Rename exe to include version (Windows)
         id: rename_exe_windows
@@ -101,9 +103,11 @@ jobs:
           ORIG: ${{ steps.find_exe.outputs.exe_path }}
           VER: ${{ steps.get_version_windows.outputs.version }}
         run: |
+          cd ci
           uv venv --python cpython-3.13
           $exe_path = uv run python ci/rename_exe.py $ORIG $VER
           exho "exe_path=$exe_path" >> $GITHUB_OUTPUT
+          cd ..
 
       - name: Get datetime
         id: get_datetime
