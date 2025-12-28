@@ -26,7 +26,14 @@ from positive_tool import pt
 from ..ppb_backend import ppb_backend  # ty:ignore[unresolved-import]
 
 PROJECT_NAME = "positive_password_book"
-project_path = pt.find_project_path(PROJECT_NAME)
+
+
+if hasattr(sys, "_MEIPASS") is True:
+    # project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(sys.executable))
+    project_path = os.path.dirname(sys.executable)
+else:
+    project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(__file__))
+# project_path = pt.find_project_path(PROJECT_NAME)
 
 
 class PPBActionPrompt(PromptBase[str]):
@@ -424,6 +431,7 @@ def main(logger, version):
 
 
 def launcher():
+    # TODO 待改成ppb_launcher或launch_tui統一啟動
     import os
     import datetime
 

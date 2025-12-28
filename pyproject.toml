@@ -12,3 +12,4 @@ dependencies = [
 [project.optional-dependencies]
 tui = ["rich>=14.2.0"]
 gui = ["pyside6>=6.10.1"]
+build = ["pyinstaller>=6.17.0"]
