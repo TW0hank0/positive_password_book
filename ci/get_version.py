@@ -9,7 +9,7 @@ def main():
     # v = d.get("project", {}).get("version") or d.get("tool", {}).get("poetry", {}).get(
     # "version"
     # )
-    v = d.get("project", {}).get("version")
+    v = d["project"]["version"]
     print(v)
 
 
