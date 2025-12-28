@@ -34,10 +34,10 @@ jobs:
       - name: Build executable with pyinstaller
         run: uv run pyinstaller launch_tui.spec
 
-      - name: Upload wheel artifact
+      - name: Upload exe artifact
         uses: actions/upload-artifact@v4
         with:
-          name: positive_password_book_launch_tui
+          name: positive_password_book_launch_*
           path: dist/*
 
       - name: Get package version
@@ -49,7 +49,7 @@ jobs:
       - name: Find built exe
         id: find_exe
         run: |
-          file=$(ls dist/positive_password_book_launch_tui* | head -n 1)
+          file=$(ls dist/positive_password_book_launch_* | head -n 1)
           echo "exe_path=$file" >> $GITHUB_OUTPUT
           echo "exe_name=$(basename \"$file\")" >> $GITHUB_OUTPUT
 
