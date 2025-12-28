@@ -4,7 +4,7 @@ import tomllib
 
 
 def main():
-    if len(sys.argv) >= 3:
+    if len(sys.argv) >= 3 and sys.argv[2] != "--pre":
         orig = os.path.abspath(sys.argv[2])
     else:
         for i in os.listdir(
@@ -15,7 +15,7 @@ def main():
                     os.path.join(os.path.dirname(__file__), "..", "dist", i)
                 )
                 break
-    if len(sys.argv) >= 2:
+    if len(sys.argv) >= 2 and sys.argv[1] != "--pre":
         ver = sys.argv[1]
     else:
         d = tomllib.load(
