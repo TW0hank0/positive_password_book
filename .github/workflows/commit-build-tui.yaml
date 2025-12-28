@@ -62,7 +62,8 @@ jobs:
         run: |
           cd ci
           uv venv --python cpython-3.13
-          $version = uv run get_version.py
+          cd ..
+          $version = uv run ci/get_version.py
           echo "Version: $version"
           echo "PACKAGE_VERSION=$version" >> $env:GITHUB_OUTPUT
 
@@ -78,7 +79,7 @@ jobs:
         id: find_exe_windows
         if: runner.os == 'Windows'
         run: |
-          $file = uv run find_exe.py
+          $file = uv run ci/find_exe.py
           echo "exe_path=$file" >> $env:GITHUB_OUTPUT
           echo "exe_name=$(uv run python -c "import os; print(os.path.basename('$file'))")" >> $env:GITHUB_OUTPUT
 
@@ -120,7 +121,6 @@ jobs:
           ORIG: ${{ steps.find_exe.outputs.exe_path }}
           VER: ${{ steps.get_version_windows.outputs.version }}
         run: |
-          uv venv --python cpython-3.13
           $exe_path = uv run python ci/rename_exe.py $ORIG $VER
           echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
 
