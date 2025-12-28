@@ -52,7 +52,7 @@ jobs:
         id: get_version_linux
         if: runner.os == 'Linux'
         run: |
-          version=$(python -c "import tomllib; import sys;d=tomllib.load(open('pyproject.toml','rb'));v = d.get('project', {}).get('version') or d.get('tool', {}).get('poetry',{}).get('version'); print(v)")
+          version=$(uv run ci/get_version.py)
           echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Get package version (Winodws)
@@ -74,7 +74,7 @@ jobs:
           echo "exe_path=$file" >> $GITHUB_OUTPUT
           echo "exe_name=$(basename \"$file\")" >> $GITHUB_OUTPUT
 
-      - name: Find built exe (Winodws)
+      - name: Find built exe (Windows)
         id: find_exe_windows
         if: runner.os == 'Windows'
         run: |
@@ -88,11 +88,19 @@ jobs:
           echo "PWD: $(pwd)"
           ls -la dist || true
 
-      - name: Get short SHA
+      - name: Get short SHA (Linux)
         id: get_sha
+        if: runner.os == 'Linux'
         run: |
-          short=$(echo $GITHUB_SHA | cut -c1-7)
+          short=$(uv run ci/get_sha.py $GITHUB_SHA)
           echo "short_sha=$short" >> $GITHUB_OUTPUT
+
+      - name: Get short SHA (Windows)
+        id: get_sha
+        if: runner.os == 'Windows'
+        run: |
+          $short = uv run ci/get_sha.py $GITHUB_SHA
+          echo "short_sha=$short" >> $env:GITHUB_OUTPUT
 
       - name: Rename exe to include version (Linux)
         id: rename_exe_linux
