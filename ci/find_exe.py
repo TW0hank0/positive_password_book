@@ -7,3 +7,6 @@ def main():
         if i.startswith("positive_password_book"):
             print(i)
             break
+
+
+main()
