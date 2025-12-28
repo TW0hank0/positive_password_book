@@ -134,6 +134,7 @@ jobs:
 
       - name: Create prerelease and upload wheel (Linux)
         uses: ncipollo/release-action@v1
+        if: runner.os == 'Linux'
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ steps.get_version_linux.outputs.version }}-pre-${{ steps.get_sha_linux.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
@@ -149,6 +150,7 @@ jobs:
 
       - name: Create prerelease and upload wheel (Windows)
         uses: ncipollo/release-action@v1
+        if: runner.os == 'Windows'
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ steps.get_version_windows.outputs.version }}-pre-${{ steps.get_sha_windows.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
