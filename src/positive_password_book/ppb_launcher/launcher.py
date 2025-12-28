@@ -15,7 +15,7 @@ if hasattr(sys, "_MEIPASS") is False:
         0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     )
 
-from ... import positive_password_book
+from ... import positive_password_book  # ty:ignore[unresolved-import]
 
 PROJECT_NAME = "positive_password_book"
 if hasattr(sys, "_MEIPASS") is True:

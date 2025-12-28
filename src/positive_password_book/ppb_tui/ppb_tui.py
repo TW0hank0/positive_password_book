@@ -1,4 +1,3 @@
-from click.core import V
 import json
 import time
 import os
@@ -16,7 +15,7 @@ from rich.prompt import Prompt, PromptBase, Confirm
 from rich.rule import Rule
 from rich.layout import Layout
 from rich.tree import Tree
-from rich.align import Align
+# from rich.align import Align
 
 # from rich.padding import Padding
 from rich.containers import Renderables
@@ -428,7 +427,7 @@ def launcher():
     import os
     import datetime
 
-    from ... import positive_password_book
+    from ... import positive_password_book  # ty:ignore[unresolved-import]
 
     log_dir = os.path.join(project_path, ".logs")
     if os.path.exists(log_dir) is False or os.path.isdir(log_dir) is False:
