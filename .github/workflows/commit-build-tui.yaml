@@ -128,8 +128,9 @@ jobs:
 
       - name: Get datetime (Linux)
         id: get_datetime_linux
+        if: runner.os == 'Linux'
         run: |
-          datetime=$(python -c "import datetime; print(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))")
+          datetime=$(uv run python -c "import datetime; print(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))")
           echo "datetime=$datetime" >> $GITHUB_OUTPUT
 
       - name: Get datetime (Windows)
