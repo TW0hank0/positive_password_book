@@ -1,0 +1,159 @@
+name: build-and-upload-release-tui
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: [cpython-3.13]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python with uv
+        run: uv python install ${{ matrix.python }}
+
+      - name: Create venv
+        run: uv venv
+
+      - name: Install project dependencies with uv
+        run: uv sync --extra tui --extra build
+
+      - name: Build executable with pyinstaller
+        run: uv run pyinstaller launch_tui.spec
+
+      - name: Prepare CI Venv
+        run: |
+          cd ci
+          uv venv --python cpython-3.13
+          cd ..
+
+      - name: Get package version (Linux)
+        id: get_version_linux
+        if: runner.os == 'Linux'
+        run: |
+          cd ci
+          version=$(uv run get_version.py)
+          cd ..
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Get package version (Winodws)
+        id: get_version_windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd ci
+          $version = uv run get_version.py
+          cd ..
+          echo "Version: $version"
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Find built exe (Linux)
+        id: find_exe_linux
+        if: runner.os == 'Linux'
+        run: |
+          cd ci
+          file=$(uv run find_exe.py)
+          cd ..
+          echo "exe_path=$file" >> $GITHUB_OUTPUT
+          echo "exe_name=$(basename \"$file\")" >> $GITHUB_OUTPUT
+
+      - name: Find built exe (Windows)
+        id: find_exe_windows
+        if: runner.os == 'Windows'
+        run: |
+          cd ci
+          $file = uv run find_exe.py
+          echo "exe_path=$file" >> $env:GITHUB_OUTPUT
+          echo "exe_name=$(uv run python -c "import os; print(os.path.basename('$file'))")" >> $env:GITHUB_OUTPUT
+          cd ..
+
+      - name: Show dist contents (debug)
+        shell: bash
+        run: |
+          echo "PWD: $(pwd)"
+          ls -la dist || true
+          echo '---'
+          ls
+
+      - name: Rename exe to include version (Linux)
+        id: rename_exe_linux
+        if: runner.os == 'Linux'
+        env:
+          ORIG: ${{ steps.find_exe_linux.outputs.exe_path }}
+          VER: ${{ steps.get_version_linux.outputs.version }}
+        run: |
+          cd ci
+          exe_path=$(python rename_exe.py $VER $ORIG)
+          echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
+          cd ..
+
+      - name: Rename exe to include version (Windows)
+        id: rename_exe_windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          ORIG: ${{ steps.find_exe_windows.outputs.exe_path }}
+          VER: ${{ steps.get_version_windows.outputs.version }}
+        run: |
+          cd ci
+          $exe_path = uv run rename_exe.py $VER $ORIG
+          echo "exe_path=$exe_path" >> $env:GITHUB_OUTPUT
+          cd ..
+
+      - name: Upload exe artifact (Windows)
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: positive_password_book_launch_tui.exe
+          path: dist/*
+
+      - name: Upload exe artifact (Linux)
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: positive_password_book_launch_tui
+          path: dist/*
+
+  upload:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Upload artifacts to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPLOAD_URL: ${{ github.event.release.upload_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          upload_url="${UPLOAD_URL%\{*}"
+          echo "Uploading artifacts to $upload_url"
+          shopt -s globstar || true
+          for f in artifacts/**; do
+            if [ -f "$f" ]; then
+              echo "Uploading $f"
+              curl -sS -X POST \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                -H "Content-Type: application/octet-stream" \
+                --data-binary @"$f" \
+                "$upload_url?name=$(basename "$f")"
+            fi
+          done
