@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         python: [cpython-3.13]
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - name: Checkout code
