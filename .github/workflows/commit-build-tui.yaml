@@ -87,7 +87,7 @@ jobs:
         id: rename_exe_linux
         if: runner.os == 'Linux'
         env:
-          ORIG: ${{ steps.exe_wheel.outputs.exe_path }}
+          ORIG: ${{ steps.find_exe.outputs.exe_path }}
           VER: ${{ steps.get_version_linux.outputs.version }}
         run: |
           exe_path=$(python ci/rename_exe.py $ORIG $VER)
@@ -98,10 +98,11 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          ORIG: ${{ steps.exe_wheel.outputs.exe_path }}
+          ORIG: ${{ steps.find_exe.outputs.exe_path }}
           VER: ${{ steps.get_version_windows.outputs.version }}
         run: |
-          $exe_path = (python ci/rename_exe.py $ORIG $VER)
+          uv venv --python cpython-3.13
+          $exe_path = uv run python ci/rename_exe.py $ORIG $VER
           exho "exe_path=$exe_path" >> $GITHUB_OUTPUT
 
       - name: Get datetime
