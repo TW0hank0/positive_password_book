@@ -1,9 +1,10 @@
 import sys
 import os
+import tomllib
 
 
 def main():
-    if len(sys.argv) == 3:
+    if len(sys.argv) >= 3:
         orig = os.path.abspath(sys.argv[2])
     else:
         for i in os.listdir(
@@ -12,7 +13,13 @@ def main():
             if i.startswith("positive_password_book"):
                 orig = os.path.abspath(i)
                 break
-    ver = sys.argv[1]
+    if len(sys.argv) >= 2:
+        ver = sys.argv[1]
+    else:
+        d = tomllib.load(
+            open(os.path.join(os.path.dirname(__file__), "..", "pyproject.toml"), "rb")
+        )
+        ver = d["project"]["version"]
     root, ext = os.path.splitext(os.path.basename(orig))
     new_name = f"{root}_{ver}.{ext}"
     new_path = os.path.join(os.path.dirname(orig), new_name)
