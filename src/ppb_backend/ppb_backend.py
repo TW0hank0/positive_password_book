@@ -78,6 +78,8 @@ class PasswordBookSystem:
                     index += 1
             if acc_exists is True:
                 del self._data[app_name][index]
+                if len(self._data[app_name]) <= 0:
+                    del self._data[app_name]
             else:
                 raise IndexError()
 

@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "gruntfuggly.todo-tree",
+        "alefragnani.bookmarks",
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "astral-sh.ty"
+    ]
+}

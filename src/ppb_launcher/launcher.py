@@ -13,7 +13,8 @@ from positive_tool import pt
 # sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 PROJECT_NAME = "positive_password_book"
 if hasattr(sys, "_MEIPASS") is True:
-    project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(sys.executable))
+    # project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(sys.executable))
+    project_path = os.path.dirname(sys.executable)
 else:
     project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(__file__))
 app_cli = typer.Typer(name=PROJECT_NAME)

@@ -15,6 +15,10 @@ from rich.prompt import Prompt, PromptBase, Confirm
 from rich.rule import Rule
 from rich.layout import Layout
 from rich.tree import Tree
+from rich.padding import Padding
+from rich.align import Align
+from rich.containers import Renderables
+
 
 from positive_tool import pt
 
@@ -136,7 +140,7 @@ class PasswordBook:
         #
         table = Table()
         header_style = Style(color="blue")
-        table.add_column("應用程式", min_width=15, header_style=header_style)
+        table.add_column("應用程式", min_width=10, header_style=header_style)
         table.add_column("帳號", min_width=20, header_style=header_style)
         table.add_column("密碼", min_width=20, header_style=header_style)
         table.add_column("user_note", header_style=header_style, min_width=10)
@@ -150,10 +154,23 @@ class PasswordBook:
                     table.add_row(app, app_data["acc"], app_data["pwd"])
         layout = Layout()
         layout.add_split(Layout(table))
-        layout.add_split(Layout(Text(f"第{self.page_num}頁，共{self.page_max_num}頁")))
+        # layout.add_split(Layout(Text(f"第{self.page_num}頁，共{self.page_max_num}頁")))
+        page_info = Text(
+            f"第{self.page_num}頁，共{self.page_max_num}頁", style="dim italic"
+        )
+        # 建立內容組合
+        content = Renderables([table, Align(page_info, align="right")])
+        # self.console.print(
+        # Panel(
+        # layout,
+        # title=Text(PROJECT_NAME, style=Style(color="purple", bold=True)),
+        # height=self.console.size.height - 3,
+        # )
+        # )
+        # self.console.print(Text(f"第{self.page_num}頁，共{self.page_max_num}頁"))
         self.console.print(
             Panel(
-                layout,
+                content,
                 title=Text(PROJECT_NAME, style=Style(color="purple", bold=True)),
                 height=self.console.size.height - 3,
             )
@@ -232,7 +249,7 @@ class PasswordBook:
             self.console.print("已取消新增！")
             time.sleep(1.5)
 
-    def delete_appdata(self):
+    def delete_appdata(self):  # TODO 新增`trash_can`垃圾桶功能
         self.console.clear()
         self.console.print(
             Rule(
@@ -242,6 +259,66 @@ class PasswordBook:
                 style="bright_blue",
             )
         )
+        apps = [i for i in list(self.data.keys()) if i != "trash_can"]
+        self.logger.debug(f"找到的應用程式： {apps}")
+        # self.console.print(apps)
+        apps_choices = Text(
+            f"〔{', '.join(apps)}〕", style=Style(color="bright_magenta")
+        )
+        while True:
+            app = Prompt.ask(
+                Text("選擇要刪除帳號的應用程式") + apps_choices, console=self.console
+            )
+            if app not in apps:
+                self.console.print(
+                    Text(
+                        f"輸入錯誤：找不到「{app}」",
+                        style=Style(color="red", blink=True),
+                    )
+                )
+            else:
+                break
+        #
+        accs = [i["acc"] for i in self.data[app]]
+        self.logger.debug(f"找到的帳號： {apps}")
+        accs_choices = Text(
+            f"〔{', '.join(accs)}〕", style=Style(color="bright_magenta")
+        )
+        while True:
+            acc = Prompt.ask(
+                Text("選擇要刪除的帳號") + accs_choices, console=self.console
+            )
+            if acc not in accs:
+                self.console.print(
+                    Text(
+                        f"輸入錯誤：找不到「{acc}」",
+                        style=Style(color="red", blink=True),
+                    )
+                )
+            else:
+                break
+        self.console.print(self.acc_tree(app, acc))
+        if Confirm.ask("是否要刪除？") is True:
+            self.backend.password_book_delete(app, acc)
+            self.console.print("已完成刪除。")
+            time.sleep(1)
+        else:
+            self.console.print("已取消刪除！")
+            time.sleep(1)
+
+    def acc_tree(self, app, acc) -> Tree:
+        if app in list(self.data.keys()) and acc in [i["acc"] for i in self.data[app]]:
+            key_style = Style(color="blue")
+            value_style = Style(color="yellow")
+            tree = Tree(app, style=key_style)
+            tree.add("帳號", style=key_style).add(acc, style=value_style)
+            for i in self.data[app]:
+                if i["acc"] == acc:
+                    tree.add("密碼", style=key_style).add(i["pwd"], style=value_style)
+                    break
+            return tree
+        else:
+            raise KeyError("找不到應用程式/帳號")
 
     def main(self):
         is_user_input_error = False
@@ -256,27 +333,32 @@ class PasswordBook:
                         style=Style(blink=True, underline=True, color="red"),
                     )
                     is_user_input_error = False
-                self.console.print(
-                    "輸入動作",
-                    Text(
-                        "〔新增, 刪除, 離開, 重新整理〕",
-                        style=Style(color="bright_magenta"),
-                    ),
-                    end="",
+                # self.console.print(
+                # Text("輸入動作")
+                # + Text(
+                # "〔新增, 刪除, 離開, 重新整理〕",
+                # style=Style(color="bright_magenta"),
+                # ),
+                # end="",
+                # )
+                prompt = Text("輸入動作") + Text(
+                    "〔新增, 刪除, 離開, 重新整理〕",
+                    style=Style(color="bright_magenta"),
                 )
                 try:
                     user_action = PPBActionPrompt.ask(
+                        prompt=prompt,
                         console=self.console,
                         show_choices=False,
                         choices=[
                             "新增",
-                            "i",
+                            "a",
                             "刪除",
                             "d",
                             "離開",
                             "q",
                             "重新整理",
-                            "q",
+                            "r",
                         ],
                     )
                 except ValueError:
@@ -284,11 +366,12 @@ class PasswordBook:
                     is_user_input_error = True
                 else:
                     break
-            if user_action in ["新增", "i"]:
+            if user_action in ["新增", "a"]:
                 self.insert_appdata()
             elif user_action in ["刪除", "d"]:
-                self.console.print("未完成功能！")
-                time.sleep(2)
+                # self.console.print("未完成功能！")
+                # time.sleep(2)
+                self.delete_appdata()
             elif user_action in ["離開", "q"]:
                 break
             elif user_action in ["重新整理", "r"]:
