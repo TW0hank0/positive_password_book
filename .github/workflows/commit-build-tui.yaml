@@ -110,7 +110,7 @@ jobs:
           ORIG: ${{ steps.find_exe_linux.outputs.exe_path }}
           VER: ${{ steps.get_version_linux.outputs.version }}
         run: |
-          exe_path=$(python ci/rename_exe.py $ORIG $VER)
+          exe_path=$(python ci/rename_exe.py $VER $ORIG)
           echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
 
       - name: Rename exe to include version (Windows)
@@ -121,7 +121,7 @@ jobs:
           ORIG: ${{ steps.find_exe_windows.outputs.exe_path }}
           VER: ${{ steps.get_version_windows.outputs.version }}
         run: |
-          $exe_path = uv run python ci/rename_exe.py $ORIG $VER
+          $exe_path = uv run python ci/rename_exe.py $VER $ORIG
           echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
 
       - name: Get datetime
