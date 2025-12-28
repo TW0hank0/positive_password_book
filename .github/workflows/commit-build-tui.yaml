@@ -126,26 +126,33 @@ jobs:
           $exe_path = uv run python ci/rename_exe.py $VER $ORIG
           echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
 
-      - name: Get datetime
-        id: get_datetime
+      - name: Get datetime (Linux)
+        id: get_datetime_linux
         run: |
           datetime=$(python -c "import datetime; print(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))")
           echo "datetime=$datetime" >> $GITHUB_OUTPUT
+
+      - name: Get datetime (Windows)
+        id: get_datetime_windows
+        if: runner.os == 'Windows'
+        run: |
+          $datetime = uv run python -c "import datetime; print(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))"
+          echo "datetime=$datetime" >> $env:GITHUB_OUTPUT
 
       - name: Create prerelease and upload wheel (Linux)
         uses: ncipollo/release-action@v1
         if: runner.os == 'Linux'
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ steps.get_version_linux.outputs.version }}-pre-${{ steps.get_sha_linux.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
-          name: pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_sha_linux.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
+          tag: v${{ steps.get_version_linux.outputs.version }}-pre-${{ steps.get_sha_linux.outputs.short_sha }}-${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}
+          name: pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_sha_linux.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}
           prerelease: true
           artifacts: ${{ steps.rename_exe_linux.outputs.exe_path }}
           body: |
             **這是測試版，使用github action製作**
             - 系統： ${{ matrix.os }}
             - 版本： ${{ steps.get_version_linux.outputs.version }}
-            - 時間： ${{ steps.get_datetime.outputs.datetime }}
+            - 時間： ${{ steps.get_datetime_linux.outputs.datetime }}
             - github_sha： ${{ steps.get_sha_linux.outputs.short_sha }}
 
       - name: Create prerelease and upload wheel (Windows)
@@ -153,13 +160,13 @@ jobs:
         if: runner.os == 'Windows'
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ steps.get_version_windows.outputs.version }}-pre-${{ steps.get_sha_windows.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
-          name: pre-release+${{ steps.get_version_windows.outputs.version }}+${{ steps.get_sha_windows.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
+          tag: v${{ steps.get_version_windows.outputs.version }}-pre-${{ steps.get_sha_windows.outputs.short_sha }}-${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}
+          name: pre-release+${{ steps.get_version_windows.outputs.version }}+${{ steps.get_sha_windows.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}
           prerelease: true
           artifacts: ${{ steps.rename_exe_windows.outputs.exe_path }}
           body: |
             **這是測試版，使用github action製作**
             - 系統： ${{ matrix.os }}
             - 版本： ${{ steps.get_version_windows.outputs.version }}
-            - 時間： ${{ steps.get_datetime.outputs.datetime }}
+            - 時間： ${{ steps.get_datetime_windows.outputs.datetime }}
             - github_sha： ${{ steps.get_sha_windows.outputs.short_sha }}
