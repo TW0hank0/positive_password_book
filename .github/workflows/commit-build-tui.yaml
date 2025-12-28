@@ -64,14 +64,23 @@ jobs:
           uv venv --python cpython-3.13
           $version = uv run get_version.py
           echo "Version: $version"
-          echo "PACKAGE_VERSION=$version" >> $env:GITHUB_ENV
+          echo "PACKAGE_VERSION=$version" >> $env:GITHUB_OUTPUT
 
-      - name: Find built exe
-        id: find_exe
+      - name: Find built exe (Linux)
+        id: find_exe_linux
+        if: runner.os == 'Linux'
         run: |
           file=$(ls dist/positive_password_book_launch_* | head -n 1)
           echo "exe_path=$file" >> $GITHUB_OUTPUT
           echo "exe_name=$(basename \"$file\")" >> $GITHUB_OUTPUT
+
+      - name: Find built exe (Winodws)
+        id: find_exe_windows
+        if: runner.os == 'Windows'
+        run: |
+          $file = uv run find_exe.py
+          echo "exe_path=$file" >> $env:GITHUB_OUTPUT
+          echo "exe_name=$(uv run python -c "import os; print(os.path.basename('$file'))")" >> $env:GITHUB_OUTPUT
 
       - name: Show dist contents (debug)
         shell: bash
