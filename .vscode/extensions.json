@@ -4,6 +4,7 @@
         "alefragnani.bookmarks",
         "ms-python.python",
         "charliermarsh.ruff",
-        "astral-sh.ty"
+        "astral-sh.ty",
+        "ms-python.vscode-pylance"
     ]
 }

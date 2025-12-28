@@ -1,4 +1,4 @@
-from src.ppb_launcher import launcher
+from src.positive_password_book.ppb_launcher import launcher
 
 
 def main():

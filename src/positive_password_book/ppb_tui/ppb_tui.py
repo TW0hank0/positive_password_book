@@ -15,7 +15,8 @@ from rich.prompt import Prompt, PromptBase, Confirm
 from rich.rule import Rule
 from rich.layout import Layout
 from rich.tree import Tree
-from rich.padding import Padding
+
+# from rich.padding import Padding
 from rich.align import Align
 from rich.containers import Renderables
 
@@ -155,11 +156,16 @@ class PasswordBook:
         layout = Layout()
         layout.add_split(Layout(table))
         # layout.add_split(Layout(Text(f"第{self.page_num}頁，共{self.page_max_num}頁")))
+        version_info = Text()
         page_info = Text(
-            f"第{self.page_num}頁，共{self.page_max_num}頁", style="dim italic"
+            f"第{self.page_num}頁，共{self.page_max_num}頁", style="italic"
         )
+        infos = Renderables([page_info])
+        content = Renderables([infos, table])
         # 建立內容組合
-        content = Renderables([table, Align(page_info, align="right")])
+        # content = Renderables(
+        # [table, Align(page_info, align="right", vertical="bottom")]
+        # )
         # self.console.print(
         # Panel(
         # layout,
