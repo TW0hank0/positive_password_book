@@ -48,11 +48,21 @@ jobs:
           name: positive_password_book_launch_tui
           path: dist/*
 
-      - name: Get package version
+      - name: Get package version (Linux)
         id: get_version
+        if: runner.os == 'Linux'
         run: |
           version=$(python -c "import tomllib; import sys;d=tomllib.load(open('pyproject.toml','rb'));v = d.get('project', {}).get('version') or d.get('tool', {}).get('poetry',{}).get('version'); print(v)")
           echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Get package version (Winodws)
+        id: get_version
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = python -c "import tomllib; d=tomllib.load(open('pyproject.toml','rb')); v = d.get('project', {}).get('version') or d.get('tool', {}).get('poetry', {}).get('version'); print(v)"
+          echo "Version: $version"
+          echo "PACKAGE_VERSION=$version" >> $env:GITHUB_ENV
 
       - name: Find built exe
         id: find_exe
@@ -72,22 +82,26 @@ jobs:
           short=$(echo $GITHUB_SHA | cut -c1-7)
           echo "short_sha=$short" >> $GITHUB_OUTPUT
 
-      - name: Rename exe to include version
+      - name: Rename exe to include version (Linux)
         id: rename_exe
+        if: runner.os == 'Linux'
         env:
           ORIG: ${{ steps.exe_wheel.outputs.exe_path }}
           VER: ${{ steps.get_version.outputs.version }}
         run: |
-          orig="$ORIG"
-          if [ -z "$orig" ]; then echo "No exe found at $ORIG"; exit 1; fi
-          base=$(basename "$orig")
-          ext="${base##*.}"
-          name="${base%.*}"
-          new="${name}+${VER}.${ext}"
-          cp "$orig" "dist/$new"
-          echo "exe_path=dist/$new" >> $GITHUB_OUTPUT
-          echo "exe_name=$new" >> $GITHUB_OUTPUT
-          ls -la dist || true
+          exe_path=$(python ci/rename_exe.py $ORIG $VER)
+          exho "exe_path=$exe_path" >> $GITHUB_OUTPUT
+
+      - name: Rename exe to include version (Windows)
+        id: rename_exe
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          ORIG: ${{ steps.exe_wheel.outputs.exe_path }}
+          VER: ${{ steps.get_version.outputs.version }}
+        run: |
+          $exe_path = (python ci/rename_exe.py $ORIG $VER)
+          exho "exe_path=$exe_path" >> $GITHUB_OUTPUT
 
       - name: Get datetime
         id: get_datetime
@@ -102,7 +116,7 @@ jobs:
           tag: v${{ steps.get_version.outputs.version }}-pre-${{ steps.get_sha.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
           name: pre-release+${{ steps.get_version.outputs.version }}+${{ steps.get_sha.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
           prerelease: true
-          artifacts: ${{ steps.rename_wheel.outputs.wheel_path }}
+          artifacts: ${{ steps.renameexe.outputs.exe_path }}
           body: |
             **這是測試版，使用github action製作**
             - 系統： ${{ matrix.os }}
