@@ -34,10 +34,18 @@ jobs:
       - name: Build executable with pyinstaller
         run: uv run pyinstaller launch_tui.spec
 
-      - name: Upload exe artifact
+      - name: Upload exe artifact (Windows)
         uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
         with:
-          name: positive_password_book_launch_*
+          name: positive_password_book_launch_tui.exe
+          path: dist/*
+
+      - name: Upload exe artifact (Linux)
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: positive_password_book_launch_tui
           path: dist/*
 
       - name: Get package version
