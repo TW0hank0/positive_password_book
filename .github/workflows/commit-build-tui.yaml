@@ -70,7 +70,7 @@ jobs:
         id: find_exe_linux
         if: runner.os == 'Linux'
         run: |
-          file=$(ls dist/positive_password_book_launch_* | head -n 1)
+          file=$(uv run find_exe.py)
           echo "exe_path=$file" >> $GITHUB_OUTPUT
           echo "exe_name=$(basename \"$file\")" >> $GITHUB_OUTPUT
 
@@ -123,7 +123,7 @@ jobs:
           cd ci
           uv venv --python cpython-3.13
           $exe_path = uv run python ci/rename_exe.py $ORIG $VER
-          exho "exe_path=$exe_path" >> $GITHUB_OUTPUT
+          echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
           cd ..
 
       - name: Get datetime

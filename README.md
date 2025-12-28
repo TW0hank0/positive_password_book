@@ -1,3 +1,10 @@
 # positive_password_book
 
-使用python，推薦3.13或更新版本
+### 使用
+
+**tui**
+```
+uv venv
+uv sync --extra tui
+uv run launch_tui.py
+```
