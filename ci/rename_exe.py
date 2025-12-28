@@ -24,9 +24,15 @@ def main():
         ver = d["project"]["version"]
     root, ext = os.path.splitext(os.path.basename(orig))
     if ext == "" or ext is None:
-        new_name = f"{root}_{ver}"
+        if "--pre" in sys.argv:
+            new_name = f"{root}_pre-{ver}"
+        else:
+            new_name = f"{root}_{ver}"
     else:
-        new_name = f"{root}_{ver}{ext}"
+        if "--pre" in sys.argv:
+            new_name = f"{root}_pre-{ver}{ext}"
+        else:
+            new_name = f"{root}_{ver}{ext}"
     new_path = os.path.join(os.path.dirname(orig), new_name)
     os.rename(orig, new_path)
     print(new_path)
