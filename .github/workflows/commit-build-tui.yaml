@@ -178,7 +178,8 @@ jobs:
             - 版本： ${{ steps.get_version_linux.outputs.version }}
             - UTC時間： ${{ steps.get_datetime_linux.outputs.datetime }}
             > 臺北時間：UTC+8
-            - github_sha： ${{ steps.get_sha_linux.outputs.short_sha }}
+            - github_sha（前7個）： ${{ steps.get_sha_linux.outputs.short_sha }}
+            - github_sha（完整）： $GITHUB_SHA
 
       - name: Create prerelease and upload wheel (Windows)
         uses: ncipollo/release-action@v1
@@ -196,4 +197,4 @@ jobs:
             - UTC時間： ${{ steps.get_datetime_windows.outputs.datetime }}
             > 臺北時間：UTC+8
             - github_sha（前7個）： ${{ steps.get_sha_windows.outputs.short_sha }}
-            - github_sha（完整）：$GITHUB_SHA
+            - github_sha（完整）： $env:GITHUB_SHA
