@@ -49,14 +49,14 @@ jobs:
           path: dist/*
 
       - name: Get package version (Linux)
-        id: get_version
+        id: get_version_linux
         if: runner.os == 'Linux'
         run: |
           version=$(python -c "import tomllib; import sys;d=tomllib.load(open('pyproject.toml','rb'));v = d.get('project', {}).get('version') or d.get('tool', {}).get('poetry',{}).get('version'); print(v)")
           echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Get package version (Winodws)
-        id: get_version
+        id: get_version_windows
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
@@ -72,6 +72,7 @@ jobs:
           echo "exe_name=$(basename \"$file\")" >> $GITHUB_OUTPUT
 
       - name: Show dist contents (debug)
+        shell: bash
         run: |
           echo "PWD: $(pwd)"
           ls -la dist || true
@@ -87,7 +88,7 @@ jobs:
         if: runner.os == 'Linux'
         env:
           ORIG: ${{ steps.exe_wheel.outputs.exe_path }}
-          VER: ${{ steps.get_version.outputs.version }}
+          VER: ${{ steps.get_version_linux.outputs.version }}
         run: |
           exe_path=$(python ci/rename_exe.py $ORIG $VER)
           exho "exe_path=$exe_path" >> $GITHUB_OUTPUT
@@ -98,7 +99,7 @@ jobs:
         shell: pwsh
         env:
           ORIG: ${{ steps.exe_wheel.outputs.exe_path }}
-          VER: ${{ steps.get_version.outputs.version }}
+          VER: ${{ steps.get_version_windows.outputs.version }}
         run: |
           $exe_path = (python ci/rename_exe.py $ORIG $VER)
           exho "exe_path=$exe_path" >> $GITHUB_OUTPUT
@@ -109,17 +110,32 @@ jobs:
           datetime=$(python -c "import datetime; print(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))")
           echo "datetime=$datetime" >> $GITHUB_OUTPUT
 
-      - name: Create prerelease and upload wheel
+      - name: Create prerelease and upload wheel (Linux)
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ steps.get_version.outputs.version }}-pre-${{ steps.get_sha.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
-          name: pre-release+${{ steps.get_version.outputs.version }}+${{ steps.get_sha.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
+          tag: v${{ steps.get_version_linux.outputs.version }}-pre-${{ steps.get_sha.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
+          name: pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_sha.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
           prerelease: true
           artifacts: ${{ steps.renameexe.outputs.exe_path }}
           body: |
             **這是測試版，使用github action製作**
             - 系統： ${{ matrix.os }}
-            - 版本： ${{ steps.get_version.outputs.version }}
+            - 版本： ${{ steps.get_version_linux.outputs.version }}
+            - 時間： ${{ steps.get_datetime.outputs.datetime }}
+            - github_sha： ${{ steps.get_sha.outputs.short_sha }}
+
+      - name: Create prerelease and upload wheel
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ steps.get_version_windows.outputs.version }}-pre-${{ steps.get_sha.outputs.short_sha }}-${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
+          name: pre-release+${{ steps.get_version_windows.outputs.version }}+${{ steps.get_sha.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime.outputs.datetime }}__${{ matrix.os }}
+          prerelease: true
+          artifacts: ${{ steps.renameexe.outputs.exe_path }}
+          body: |
+            **這是測試版，使用github action製作**
+            - 系統： ${{ matrix.os }}
+            - 版本： ${{ steps.get_version_windows.outputs.version }}
             - 時間： ${{ steps.get_datetime.outputs.datetime }}
             - github_sha： ${{ steps.get_sha.outputs.short_sha }}
