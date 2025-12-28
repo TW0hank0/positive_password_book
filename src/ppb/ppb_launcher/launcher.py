@@ -15,7 +15,7 @@ if hasattr(sys, "_MEIPASS") is False:
         0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     )
 
-from ... import positive_password_book  # ty:ignore[unresolved-import]
+from ... import ppb  # ty:ignore[unresolved-import]
 
 PROJECT_NAME = "positive_password_book"
 if hasattr(sys, "_MEIPASS") is True:
@@ -47,7 +47,7 @@ def main(app_mode: Literal["tui", "gui"] = "tui"):
         from ..ppb_tui import ppb_tui
 
         try:
-            ppb_tui.main(logger, positive_password_book.__version__)
+            ppb_tui.main(logger, ppb.__version__)
         except Exception as e:
             print("TUI異常關閉！")
             raise e

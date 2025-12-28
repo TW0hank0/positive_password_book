@@ -435,7 +435,7 @@ def launcher():
     import os
     import datetime
 
-    from ... import positive_password_book  # ty:ignore[unresolved-import]
+    from ... import ppb  # ty:ignore[unresolved-import]
 
     log_dir = os.path.join(project_path, ".logs")
     if os.path.exists(log_dir) is False or os.path.isdir(log_dir) is False:
@@ -444,7 +444,7 @@ def launcher():
     time_format_str = time_now.strftime("%Y-%d-%m_%H-%M-%S")
     log_file_path = os.path.join(log_dir, f"log_{time_format_str}.log")
     logger = pt.build_logger(log_file_path, f"{PROJECT_NAME}_logger")
-    main(logger, positive_password_book.__version__)
+    main(logger, ppb.__version__)
 
 
 if __name__ == "__main__":
