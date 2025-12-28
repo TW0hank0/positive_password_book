@@ -70,7 +70,7 @@ jobs:
         id: find_exe_linux
         if: runner.os == 'Linux'
         run: |
-          file=$(uv run find_exe.py)
+          file=$(uv run ci/find_exe.py)
           echo "exe_path=$file" >> $GITHUB_OUTPUT
           echo "exe_name=$(basename \"$file\")" >> $GITHUB_OUTPUT
 
@@ -120,11 +120,9 @@ jobs:
           ORIG: ${{ steps.find_exe.outputs.exe_path }}
           VER: ${{ steps.get_version_windows.outputs.version }}
         run: |
-          cd ci
           uv venv --python cpython-3.13
           $exe_path = uv run python ci/rename_exe.py $ORIG $VER
           echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
-          cd ..
 
       - name: Get datetime
         id: get_datetime
