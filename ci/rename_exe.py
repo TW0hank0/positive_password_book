@@ -11,7 +11,9 @@ def main():
             os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "dist")
         ):
             if i.startswith("positive_password_book"):
-                orig = os.path.abspath(i)
+                orig = os.path.abspath(
+                    os.path.join(os.path.dirname(__file__), "..", "dist", i)
+                )
                 break
     if len(sys.argv) >= 2:
         ver = sys.argv[1]
