@@ -65,7 +65,7 @@ jobs:
           cd ..
           $version = uv run ci/get_version.py
           echo "Version: $version"
-          echo "PACKAGE_VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Find built exe (Linux)
         id: find_exe_linux
@@ -107,7 +107,7 @@ jobs:
         id: rename_exe_linux
         if: runner.os == 'Linux'
         env:
-          ORIG: ${{ steps.find_exe.outputs.exe_path }}
+          ORIG: ${{ steps.find_exe_linux.outputs.exe_path }}
           VER: ${{ steps.get_version_linux.outputs.version }}
         run: |
           exe_path=$(python ci/rename_exe.py $ORIG $VER)
@@ -118,7 +118,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          ORIG: ${{ steps.find_exe.outputs.exe_path }}
+          ORIG: ${{ steps.find_exe_windows.outputs.exe_path }}
           VER: ${{ steps.get_version_windows.outputs.version }}
         run: |
           $exe_path = uv run python ci/rename_exe.py $ORIG $VER
