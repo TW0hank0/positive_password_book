@@ -48,11 +48,19 @@ jobs:
           name: positive_password_book_launch_tui
           path: dist/*
 
+      - name: Prepare CI Venv
+        run: |
+          cd ci
+          uv venv --python cpython-3.13
+          cd ..
+
       - name: Get package version (Linux)
         id: get_version_linux
         if: runner.os == 'Linux'
         run: |
-          version=$(uv run ci/get_version.py)
+          cd ci
+          version=$(uv run get_version.py)
+          cd ..
           echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Get package version (Winodws)
@@ -61,9 +69,8 @@ jobs:
         shell: pwsh
         run: |
           cd ci
-          uv venv --python cpython-3.13
+          $version = uv run get_version.py
           cd ..
-          $version = uv run ci/get_version.py
           echo "Version: $version"
           echo "version=$version" >> $env:GITHUB_OUTPUT
 
@@ -71,7 +78,9 @@ jobs:
         id: find_exe_linux
         if: runner.os == 'Linux'
         run: |
-          file=$(uv run ci/find_exe.py)
+          cd ci
+          file=$(uv run find_exe.py)
+          cd ..
           echo "exe_path=$file" >> $GITHUB_OUTPUT
           echo "exe_name=$(basename \"$file\")" >> $GITHUB_OUTPUT
 
@@ -79,9 +88,11 @@ jobs:
         id: find_exe_windows
         if: runner.os == 'Windows'
         run: |
-          $file = uv run ci/find_exe.py
+          cd ci
+          $file = uv run find_exe.py
           echo "exe_path=$file" >> $env:GITHUB_OUTPUT
           echo "exe_name=$(uv run python -c "import os; print(os.path.basename('$file'))")" >> $env:GITHUB_OUTPUT
+          cd ..
 
       - name: Show dist contents (debug)
         shell: bash
@@ -95,14 +106,18 @@ jobs:
         id: get_sha_linux
         if: runner.os == 'Linux'
         run: |
-          short=$(uv run ci/get_sha.py $GITHUB_SHA)
+          cd ci
+          short=$(uv run get_sha.py $GITHUB_SHA)
           echo "short_sha=$short" >> $GITHUB_OUTPUT
+          cd ..
 
       - name: Get short SHA (Windows)
         id: get_sha_windows
         if: runner.os == 'Windows'
         run: |
-          $short = uv run ci/get_sha.py $GITHUB_SHA
+          cd ci
+          $short = uv run get_sha.py $env:GITHUB_SHA
+          cd ..
           echo "short_sha=$short" >> $env:GITHUB_OUTPUT
 
       - name: Rename exe to include version (Linux)
@@ -112,8 +127,10 @@ jobs:
           ORIG: ${{ steps.find_exe_linux.outputs.exe_path }}
           VER: ${{ steps.get_version_linux.outputs.version }}
         run: |
-          exe_path=$(python ci/rename_exe.py $VER $ORIG)
+          cd ci
+          exe_path=$(python rename_exe.py $VER $ORIG)
           echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
+          cd ..
 
       - name: Rename exe to include version (Windows)
         id: rename_exe_windows
@@ -123,22 +140,28 @@ jobs:
           ORIG: ${{ steps.find_exe_windows.outputs.exe_path }}
           VER: ${{ steps.get_version_windows.outputs.version }}
         run: |
-          $exe_path = uv run python ci/rename_exe.py $VER $ORIG
-          echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
+          cd ci
+          $exe_path = uv run rename_exe.py $VER $ORIG
+          echo "exe_path=$exe_path" >> $env:GITHUB_OUTPUT
+          cd ..
 
       - name: Get datetime (Linux)
         id: get_datetime_linux
         if: runner.os == 'Linux'
         run: |
+          cd ci
           datetime=$(uv run python -c "import datetime; print(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))")
           echo "datetime=$datetime" >> $GITHUB_OUTPUT
+          cd ..
 
       - name: Get datetime (Windows)
         id: get_datetime_windows
         if: runner.os == 'Windows'
         run: |
+          cd ci
           $datetime = uv run python -c "import datetime; print(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))"
           echo "datetime=$datetime" >> $env:GITHUB_OUTPUT
+          cd ..
 
       - name: Create prerelease and upload wheel (Linux)
         uses: ncipollo/release-action@v1
