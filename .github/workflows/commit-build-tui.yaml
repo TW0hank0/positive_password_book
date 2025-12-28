@@ -177,6 +177,7 @@ jobs:
             - 系統： ${{ matrix.os }}
             - 版本： ${{ steps.get_version_linux.outputs.version }}
             - UTC時間： ${{ steps.get_datetime_linux.outputs.datetime }}
+            > 臺北時間：UTC+8
             - github_sha： ${{ steps.get_sha_linux.outputs.short_sha }}
 
       - name: Create prerelease and upload wheel (Windows)
@@ -193,4 +194,6 @@ jobs:
             - 系統： ${{ matrix.os }}
             - 版本： ${{ steps.get_version_windows.outputs.version }}
             - UTC時間： ${{ steps.get_datetime_windows.outputs.datetime }}
-            - github_sha： ${{ steps.get_sha_windows.outputs.short_sha }}
+            > 臺北時間：UTC+8
+            - github_sha（前7個）： ${{ steps.get_sha_windows.outputs.short_sha }}
+            - github_sha（完整）：$GITHUB_SHA
