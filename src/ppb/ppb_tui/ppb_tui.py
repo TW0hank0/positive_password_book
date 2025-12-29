@@ -22,6 +22,7 @@ from rich.containers import Renderables
 
 
 from positive_tool import pt
+from positive_tool.arg import ArgType
 
 from ..ppb_backend import ppb_backend  # ty:ignore[unresolved-import]
 
@@ -109,7 +110,7 @@ class PasswordBook:
     def backend_save_data(self):
         self.backend.password_book_save(self.data_file_path)
 
-    def print_data_old(self):
+    def print_data_old2(self):
         self.console.clear()
         if self.data is None:
             self.get_backend_data()
@@ -135,7 +136,7 @@ class PasswordBook:
             )
         )
 
-    def print_data(self):
+    def print_data_old(self):
         #
         # self.console.clear()
         # if self.data is None:
@@ -201,6 +202,68 @@ class PasswordBook:
         # )
         # )
         # self.console.print(Text(f"第{self.page_num}頁，共{self.page_max_num}頁"))
+        self.console.print(
+            Panel(
+                content,
+                title=Text(PROJECT_NAME, style=Style(color="purple", bold=True)),
+                height=self.console.size.height - 3,
+            )
+        )
+
+    def print_data(self, clear_scrren: bool = False):
+        self.logger.debug(f"所有分頁： {self.pages}")
+        self.logger.debug(f"資料： {self.data}")
+        self.logger.debug(f"總頁數： {self.page_max_num}")
+        #
+        if clear_scrren is True:
+            self.console.clear()
+        # table = Table()
+        # header_style = Style(color="blue")
+        # table.add_column("應用程式", min_width=10, header_style=header_style)
+        # table.add_column("帳號", min_width=20, header_style=header_style)
+        # table.add_column("密碼", min_width=20, header_style=header_style)
+        # table.add_column("user_note", header_style=header_style, min_width=10)
+        # table.add_column("note", header_style=header_style, min_width=10)
+        tree = Tree(
+            "positive_password_book", style=Style(color="bright_blue", bold=True)
+        )
+        if len(self.pages) > 0 and self.page_max_num > 0:
+            app_rounded = []
+            for app, app_data in self.pages[self.page_num - 1]:
+                self.logger.debug(f"app:{app}, app_data:{app_data}")
+                if app == "trash_can" or app in app_rounded:
+                    continue
+                else:
+                    # table.add_row(app, app_data["acc"], app_data["pwd"])
+                    child_tree = self.acc_tree(app)
+                    self.logger.debug(f"child_tree： {child_tree}")
+                    tree.children.append(child_tree)
+                    app_rounded.append(app)
+        page_info = Text(
+            f"第{self.page_num}頁，共{self.page_max_num}頁", style="", end=""
+        )
+        version_text = f"版本： {self.version}"
+        version_info = Text(
+            (
+                " "
+                * (
+                    int(
+                        (
+                            self.console.size.width
+                            - 4
+                            - (len(str(page_info)) + 5)
+                            - (len(version_text) + 3)
+                        )
+                        / 2
+                    )
+                    - int((len(version_text) + 3) / 2)
+                )
+            )
+            + version_text
+        )
+        info_rule = Rule(style=Style(color="green", dim=True))
+        infos = Renderables([page_info, version_info])
+        content = Renderables([infos, info_rule, tree])
         self.console.print(
             Panel(
                 content,
@@ -278,6 +341,7 @@ class PasswordBook:
             self.backend.password_book_insert(app_name, acc, pwd)
             self.backend_save_data()
             self.get_backend_data()
+            self.backend_save_data()
         else:
             self.console.print("已取消新增！")
             time.sleep(1.5)
@@ -339,19 +403,46 @@ class PasswordBook:
             self.console.print("已取消刪除！")
             time.sleep(1)
 
-    def acc_tree(self, app, acc) -> Tree:
-        if app in list(self.data.keys()) and acc in [i["acc"] for i in self.data[app]]:
-            key_style = Style(color="blue")
-            value_style = Style(color="yellow")
-            tree = Tree(app, style=key_style)
-            tree.add("帳號", style=key_style).add(acc, style=value_style)
-            for i in self.data[app]:
-                if i["acc"] == acc:
-                    tree.add("密碼", style=key_style).add(i["pwd"], style=value_style)
-                    break
-            return tree
+    def acc_tree(
+        self, app: str, acc: str | None = None
+    ) -> Tree:  # TODO: 支援顯示`trash_can`內的內容
+        ArgType("app", app, [str])
+        ArgType("acc", acc, [str, None])
+        if acc is not None:
+            if (
+                app != "trash_can"
+                and app in list(self.data.keys())
+                and acc in [i["acc"] for i in self.data[app]]
+            ):
+                key_style = Style(color="blue")
+                value_style = Style(color="yellow")
+                tree = Tree(app, style=key_style)
+                tree_acc = tree.add("帳號", style=key_style)
+                tree_acc.add(acc, style=value_style)
+                for i in self.data[app]:
+                    if i["acc"] == acc:
+                        tree_acc.add("密碼", style=key_style).add(
+                            i["pwd"], style=value_style
+                        )
+                        break
+                return tree
+            else:
+                raise KeyError("找不到應用程式/帳號")
         else:
-            raise KeyError("找不到應用程式/帳號")
+            if app in list(self.data.keys()):
+                key_style = Style(color="blue")
+                value_style = Style(color="yellow")
+                tree = Tree(app, style=key_style)
+                app_datas = self.data[app]
+                for app_data in app_datas:
+                    tree_acc = tree.add("帳號", style=key_style)
+                    tree_acc.add(app_data["acc"], style=value_style)
+                    tree_acc.add("密碼", style=key_style).add(
+                        app_data["pwd"], style=value_style
+                    )
+                return tree
+            else:
+                raise KeyError("找不到應用程式！")
 
     def main(self):
         is_user_input_error = False

@@ -169,7 +169,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ steps.get_version_linux.outputs.version }}-pre-${{ steps.get_sha_linux.outputs.short_sha }}-${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}
-          name: pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_sha_linux.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}
+          name: positive_password_book_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_sha_linux.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}
           prerelease: true
           artifacts: ${{ steps.rename_exe_linux.outputs.exe_path }}
           body: |
@@ -187,7 +187,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ steps.get_version_windows.outputs.version }}-pre-${{ steps.get_sha_windows.outputs.short_sha }}-${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}
-          name: pre-release+${{ steps.get_version_windows.outputs.version }}+${{ steps.get_sha_windows.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}
+          name: positive_password_book_pre-release+${{ steps.get_version_windows.outputs.version }}+${{ steps.get_sha_windows.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}
           prerelease: true
           artifacts: ${{ steps.rename_exe_windows.outputs.exe_path }}
           body: |
