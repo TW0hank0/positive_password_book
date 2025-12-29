@@ -1,6 +1,7 @@
 import sys
 import os
 import tomllib
+import platform
 
 
 def main():
@@ -33,6 +34,8 @@ def main():
             new_name = f"{root}_pre-{ver}{ext}"
         else:
             new_name = f"{root}_{ver}{ext}"
+    if platform.platform() == "Linux":
+        new_name = f"{new_name}.bin"
     new_path = os.path.join(os.path.dirname(orig), new_name)
     os.rename(orig, new_path)
     print(new_path)
