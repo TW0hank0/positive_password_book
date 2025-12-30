@@ -95,6 +95,7 @@ class PasswordBook:
         self.setting_file_path = os.path.abspath(
             os.path.join(project_path, "setting.json")
         )
+        self.setting_init()
         self.left_change_unsave: bool = False
         self.content_per_page = self.console.size.height - 8 - 3
         self.page_num = 0
@@ -113,6 +114,17 @@ class PasswordBook:
 
     def setting_init(self):
         self.setting_init_dict["acc_tree__tree_type"] = "same_line"
+        if os.path.exists(self.setting_file_path) is True and os.path.isfile(
+            self.setting_file_path
+        ):
+            self.setting_load()
+        else:
+            self.setting.update(self.setting_init_dict)
+            self.setting_save()
+
+    def setting_save(self):
+        with open(self.setting_file_path, "w", encoding="utf-8") as f:
+            json.dump(self.setting, f, ensure_ascii=False, sort_keys=True)
 
     def get_backend_data(self):
         # if self.data is None:
@@ -436,14 +448,26 @@ class PasswordBook:
                 key_style = Style(color="blue")
                 value_style = Style(color="yellow")
                 tree = Tree(app, style=key_style)
-                tree_acc_key = tree.add("帳號", style=key_style)
-                tree_acc_value = tree_acc_key.add(acc, style=value_style)
-                for i in self.data[app]:
-                    if i["acc"] == acc:
-                        tree_acc_value.add("密碼", style=key_style).add(
-                            i["pwd"], style=value_style
-                        )
-                        break
+                if self.setting["acc_tree__tree_type"] == "same_line":
+                    tree_acc = tree.add(
+                        Text("帳號：", style=key_style) + Text(acc, style=value_style)
+                    )
+                    for i in self.data[app]:
+                        if i["acc"] == acc:
+                            tree_acc.add(
+                                Text("密碼：", style=key_style)
+                                + Text(i["pwd"], style=value_style)
+                            )
+                            break
+                else:
+                    tree_acc_key = tree.add("帳號", style=key_style)
+                    tree_acc_value = tree_acc_key.add(acc, style=value_style)
+                    for i in self.data[app]:
+                        if i["acc"] == acc:
+                            tree_acc_value.add("密碼", style=key_style).add(
+                                i["pwd"], style=value_style
+                            )
+                            break
                 return tree
             else:
                 raise KeyError("找不到應用程式/帳號")
@@ -454,13 +478,23 @@ class PasswordBook:
                 tree = Tree(app, style=key_style)
                 app_datas = self.data[app]
                 for app_data in app_datas:
-                    tree_acc_key = tree.add("帳號", style=key_style)
-                    tree_acc_value = tree_acc_key.add(
-                        app_data["acc"], style=value_style
-                    )
-                    tree_acc_value.add("密碼", style=key_style).add(
-                        app_data["pwd"], style=value_style
-                    )
+                    if self.setting["acc_tree__tree_type"] == "same_line":
+                        tree_acc = tree.add(
+                            Text("帳號：", style=key_style)
+                            + Text(app_data["acc"], style=value_style)
+                        )
+                        tree_acc.add(
+                            Text("密碼：", style=key_style)
+                            + Text(app_data["pwd"], style=value_style)
+                        )
+                    else:
+                        tree_acc_key = tree.add("帳號", style=key_style)
+                        tree_acc_value = tree_acc_key.add(
+                            app_data["acc"], style=value_style
+                        )
+                        tree_acc_value.add("密碼", style=key_style).add(
+                            app_data["pwd"], style=value_style
+                        )
                 return tree
             else:
                 raise KeyError("找不到應用程式！")
