@@ -90,6 +90,11 @@ class PasswordBook:
                 sys.exit(1)
         else:
             self.backend.password_book_new()
+        self.setting = {}
+        self.setting_init_dict = {}
+        self.setting_file_path = os.path.abspath(
+            os.path.join(project_path, "setting.json")
+        )
         self.left_change_unsave: bool = False
         self.content_per_page = self.console.size.height - 8 - 3
         self.page_num = 0
@@ -100,6 +105,14 @@ class PasswordBook:
         #
         self.print_data()
         self.main()
+
+    def setting_load(self):
+        with open(self.setting_file_path, "r", encoding="utf-8") as f:
+            setting_file = json.load(f)
+        self.setting.update(setting_file)
+
+    def setting_init(self):
+        self.setting_init_dict["acc_tree__tree_type"] = "same_line"
 
     def get_backend_data(self):
         # if self.data is None:
@@ -224,21 +237,7 @@ class PasswordBook:
         # table.add_column("密碼", min_width=20, header_style=header_style)
         # table.add_column("user_note", header_style=header_style, min_width=10)
         # table.add_column("note", header_style=header_style, min_width=10)
-        tree = Tree(
-            "positive_password_book", style=Style(color="bright_blue", bold=True)
-        )
-        if len(self.pages) > 0 and self.page_max_num > 0:
-            app_rounded = []
-            for app, app_data in self.pages[self.page_num - 1]:
-                self.logger.debug(f"app:{app}, app_data:{app_data}")
-                if app == "trash_can" or app in app_rounded:
-                    continue
-                else:
-                    # table.add_row(app, app_data["acc"], app_data["pwd"])
-                    child_tree = self.acc_tree(app)
-                    self.logger.debug(f"child_tree： {child_tree}")
-                    tree.children.append(child_tree)
-                    app_rounded.append(app)
+        #
         page_info = Text(
             f"第{self.page_num}頁，共{self.page_max_num}頁", style="", end=""
         )
@@ -263,7 +262,27 @@ class PasswordBook:
         )
         info_rule = Rule(style=Style(color="green", dim=True))
         infos = Renderables([page_info, version_info])
-        content = Renderables([infos, info_rule, tree])
+        #
+        if len(self.pages) > 0 and self.page_max_num > 0:
+            tree = Tree(
+                "positive_password_book", style=Style(color="bright_blue", bold=True)
+            )
+            app_rounded = []
+            for app, app_data in self.pages[self.page_num - 1]:
+                self.logger.debug(f"app:{app}, app_data:{app_data}")
+                if app == "trash_can" or app in app_rounded:
+                    continue
+                else:
+                    # table.add_row(app, app_data["acc"], app_data["pwd"])
+                    child_tree = self.acc_tree(app)
+                    self.logger.debug(f"child_tree： {child_tree}")
+                    tree.children.append(child_tree)
+                    app_rounded.append(app)
+            content = Renderables([infos, info_rule, tree])
+        else:
+            content = Renderables(
+                [infos, info_rule, Text("無資料", style=Style(italic=True))]
+            )
         self.console.print(
             Panel(
                 content,
@@ -417,11 +436,11 @@ class PasswordBook:
                 key_style = Style(color="blue")
                 value_style = Style(color="yellow")
                 tree = Tree(app, style=key_style)
-                tree_acc = tree.add("帳號", style=key_style)
-                tree_acc.add(acc, style=value_style)
+                tree_acc_key = tree.add("帳號", style=key_style)
+                tree_acc_value = tree_acc_key.add(acc, style=value_style)
                 for i in self.data[app]:
                     if i["acc"] == acc:
-                        tree_acc.add("密碼", style=key_style).add(
+                        tree_acc_value.add("密碼", style=key_style).add(
                             i["pwd"], style=value_style
                         )
                         break
@@ -435,9 +454,11 @@ class PasswordBook:
                 tree = Tree(app, style=key_style)
                 app_datas = self.data[app]
                 for app_data in app_datas:
-                    tree_acc = tree.add("帳號", style=key_style)
-                    tree_acc.add(app_data["acc"], style=value_style)
-                    tree_acc.add("密碼", style=key_style).add(
+                    tree_acc_key = tree.add("帳號", style=key_style)
+                    tree_acc_value = tree_acc_key.add(
+                        app_data["acc"], style=value_style
+                    )
+                    tree_acc_value.add("密碼", style=key_style).add(
                         app_data["pwd"], style=value_style
                     )
                 return tree
