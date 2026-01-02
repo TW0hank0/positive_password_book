@@ -104,7 +104,6 @@ class PasswordBook:
         self.get_backend_data()
         self.refresh_page()
         #
-        self.print_data()
         self.main()
 
     def setting_load(self):
@@ -276,9 +275,7 @@ class PasswordBook:
         infos = Renderables([page_info, version_info])
         #
         if len(self.pages) > 0 and self.page_max_num > 0:
-            tree = Tree(
-                "positive_password_book", style=Style(color="bright_blue", bold=True)
-            )
+            tree = Tree("資料", style=Style(color="bright_blue", bold=True))
             app_rounded = []
             for app, app_data in self.pages[self.page_num - 1]:
                 self.logger.debug(f"app:{app}, app_data:{app_data}")
@@ -295,10 +292,19 @@ class PasswordBook:
             content = Renderables(
                 [infos, info_rule, Text("無資料", style=Style(italic=True))]
             )
+        # self.console.print(
+        #     Panel(
+        #         content,
+        #         title=Text(PROJECT_NAME, style=Style(color="purple", bold=True)),
+        #         height=self.console.size.height - 3,
+        #     )
+        # )
         self.console.print(
             Panel(
                 content,
-                title=Text(PROJECT_NAME, style=Style(color="purple", bold=True)),
+                title=Text(
+                    PROJECT_NAME, style=Style(color="rgb(175, 0, 255)", bold=True)
+                ),
                 height=self.console.size.height - 3,
             )
         )
@@ -439,65 +445,103 @@ class PasswordBook:
     ) -> Tree:  # TODO: 支援顯示`trash_can`內的內容
         ArgType("app", app, [str])
         ArgType("acc", acc, [str, None])
-        if acc is not None:
-            if (
-                app != "trash_can"
-                and app in list(self.data.keys())
-                and acc in [i["acc"] for i in self.data[app]]
-            ):
-                key_style = Style(color="blue")
-                value_style = Style(color="yellow")
-                tree = Tree(app, style=key_style)
-                if self.setting["acc_tree__tree_type"] == "same_line":
-                    tree_acc = tree.add(
-                        Text("帳號：", style=key_style) + Text(acc, style=value_style)
-                    )
-                    for i in self.data[app]:
-                        if i["acc"] == acc:
-                            tree_acc.add(
-                                Text("密碼：", style=key_style)
-                                + Text(i["pwd"], style=value_style)
-                            )
-                            break
+        #
+        var_app_data: list[tuple[str, str]] = []
+        if acc is None:
+            if app != "trash_can" and app in list(self.data.keys()):
+                for i in self.data:
+                    if i == app:
+                        for a in self.data[app]:
+                            var_app_data.append((a["acc"], a["pwd"]))
+                        break
                 else:
-                    tree_acc_key = tree.add("帳號", style=key_style)
-                    tree_acc_value = tree_acc_key.add(acc, style=value_style)
-                    for i in self.data[app]:
-                        if i["acc"] == acc:
-                            tree_acc_value.add("密碼", style=key_style).add(
-                                i["pwd"], style=value_style
-                            )
-                            break
-                return tree
+                    raise KeyError("找不到應用程式/帳號")
             else:
                 raise KeyError("找不到應用程式/帳號")
         else:
-            if app in list(self.data.keys()):
-                key_style = Style(color="blue")
-                value_style = Style(color="yellow")
-                tree = Tree(app, style=key_style)
-                app_datas = self.data[app]
-                for app_data in app_datas:
-                    if self.setting["acc_tree__tree_type"] == "same_line":
-                        tree_acc = tree.add(
-                            Text("帳號：", style=key_style)
-                            + Text(app_data["acc"], style=value_style)
-                        )
-                        tree_acc.add(
-                            Text("密碼：", style=key_style)
-                            + Text(app_data["pwd"], style=value_style)
-                        )
-                    else:
-                        tree_acc_key = tree.add("帳號", style=key_style)
-                        tree_acc_value = tree_acc_key.add(
-                            app_data["acc"], style=value_style
-                        )
-                        tree_acc_value.add("密碼", style=key_style).add(
-                            app_data["pwd"], style=value_style
-                        )
-                return tree
+            for i in self.data[app]:
+                if i["acc"] == acc:
+                    var_app_data.append((i["acc"], i["pwd"]))
+                    break
             else:
-                raise KeyError("找不到應用程式！")
+                raise KeyError("找不到應用程式/帳號")
+        #
+        key_style = Style(color="blue")
+        value_style = Style(color="yellow")
+        tree = Tree(Text("應用程式：", style=key_style) + Text(app, style=value_style))
+        for acc, pwd in var_app_data:
+            if self.setting["acc_tree__tree_type"] == "same_line":
+                tree_acc = tree.add(
+                    Text("帳號：", style=key_style) + Text(acc, style=value_style)
+                )
+                tree_acc.add(
+                    Text("密碼：", style=key_style) + Text(pwd, style=value_style)
+                )
+            else:
+                tree_acc_key = tree.add("帳號", style=key_style)
+                tree_acc_value = tree_acc_key.add(acc, style=value_style)
+                tree_acc_value.add("密碼", style=key_style).add(pwd, style=value_style)
+        return tree
+        #
+        # if acc is not None:
+        #     if (
+        #         app != "trash_can"
+        #         and app in list(self.data.keys())
+        #         and acc in [i["acc"] for i in self.data[app]]
+        #     ):
+        #         key_style = Style(color="blue")
+        #         value_style = Style(color="yellow")
+        #         tree = Tree(app, style=key_style)
+        #         if self.setting["acc_tree__tree_type"] == "same_line":
+        #             tree_acc = tree.add(
+        #                 Text("帳號：", style=key_style) + Text(acc, style=value_style)
+        #             )
+        #             for i in self.data[app]:
+        #                 if i["acc"] == acc:
+        #                     tree_acc.add(
+        #                         Text("密碼：", style=key_style)
+        #                         + Text(i["pwd"], style=value_style)
+        #                     )
+        #                     break
+        #         else:
+        #             tree_acc_key = tree.add("帳號", style=key_style)
+        #             tree_acc_value = tree_acc_key.add(acc, style=value_style)
+        #             for i in self.data[app]:
+        #                 if i["acc"] == acc:
+        #                     tree_acc_value.add("密碼", style=key_style).add(
+        #                         i["pwd"], style=value_style
+        #                     )
+        #                     break
+        #         return tree
+        #     else:
+        #         raise KeyError("找不到應用程式/帳號")
+        # else:
+        #     if app in list(self.data.keys()):
+        #         key_style = Style(color="blue")
+        #         value_style = Style(color="yellow")
+        #         tree = Tree(app, style=key_style)
+        #         app_datas = self.data[app]
+        #         for app_data in app_datas:
+        #             if self.setting["acc_tree__tree_type"] == "same_line":
+        #                 tree_acc = tree.add(
+        #                     Text("帳號：", style=key_style)
+        #                     + Text(app_data["acc"], style=value_style)
+        #                 )
+        #                 tree_acc.add(
+        #                     Text("密碼：", style=key_style)
+        #                     + Text(app_data["pwd"], style=value_style)
+        #                 )
+        #             else:
+        #                 tree_acc_key = tree.add("帳號", style=key_style)
+        #                 tree_acc_value = tree_acc_key.add(
+        #                     app_data["acc"], style=value_style
+        #                 )
+        #                 tree_acc_value.add("密碼", style=key_style).add(
+        #                     app_data["pwd"], style=value_style
+        #                 )
+        #         return tree
+        #     else:
+        #         raise KeyError("找不到應用程式！")
 
     def main(self):
         is_user_input_error = False
