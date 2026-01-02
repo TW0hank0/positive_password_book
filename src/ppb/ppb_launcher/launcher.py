@@ -53,5 +53,9 @@ def main(app_mode: Literal["tui", "gui"] = "tui"):
             raise e
 
 
-if __name__ == "__main__":
+def launch():
     app_cli()
+
+
+if __name__ == "__main__":
+    launch()

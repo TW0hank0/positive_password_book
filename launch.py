@@ -2,7 +2,7 @@ from src.ppb.ppb_launcher import launcher
 
 
 def main():
-    launcher.app_cli()
+    launcher.launch()
 
 
 if __name__ == "__main__":
