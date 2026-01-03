@@ -3,6 +3,7 @@ import time
 import os
 import sys
 import logging
+import queue
 
 from typing import List
 
@@ -15,16 +16,13 @@ from rich.prompt import Prompt, PromptBase, Confirm
 from rich.rule import Rule
 from rich.layout import Layout
 from rich.tree import Tree
-# from rich.align import Align
-
-# from rich.padding import Padding
 from rich.containers import Renderables
 
 
 from positive_tool import pt
 from positive_tool.arg import ArgType
 
-from ..ppb_backend import ppb_backend  # ty:ignore[unresolved-import]
+from ..ppb_backend import ppb_backend
 
 PROJECT_NAME = "positive_password_book"
 
@@ -70,10 +68,66 @@ class PPBActionPrompt(PromptBase[str]):
         return value in self.choices  # type: ignore
 
 
+class PPBLogHandler(logging.Handler):
+    """專為Rich Console設計的Log Handler"""
+
+    def __init__(self, console: Console, level=logging.INFO):
+        super().__init__(level)
+        self.console = console
+        self.logs = []  # 存儲日誌的列表
+        self.max_logs = 50  # 最大日誌數量
+
+        # 設置日誌格式
+        self.formatter = logging.Formatter(
+            "%(asctime)s | %(levelname)s | %(message)s", datefmt="%H:%M:%S"
+        )
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+
+            # 添加到日誌列表
+            self.logs.append(msg)
+
+            # 限制日誌數量
+            if len(self.logs) > self.max_logs:
+                self.logs.pop(0)
+
+        except Exception:
+            self.handleError(record)
+
+    def get_log_content(self):
+        renderables = Renderables()
+
+        # 只顯示最新的10條日誌
+        recent_logs = self.logs[-10:] if len(self.logs) > 10 else self.logs
+
+        for log in recent_logs:
+            # 根據日誌等級設置顏色
+            if "ERROR" in log or "CRITICAL" in log:
+                log_text = Text(log, style=Style(color="red"))
+            elif "WARNING" in log:
+                log_text = Text(log, style=Style(color="yellow"))
+            elif "DEBUG" in log:
+                log_text = Text(log, style=Style(color="blue"))
+            else:
+                log_text = Text(log, style=Style(color="white"))
+
+            renderables.append(log_text)
+
+        return renderables
+
+    def get_logs(self) -> list:
+        """獲取所有日誌（保持原有方法兼容）"""
+        return self.logs.copy()
+
+
 class PasswordBook:
     def __init__(self, logger: logging.Logger, version) -> None:
         self.console = Console()
         self.logger: logging.Logger = logger
+        self.ppb_tui_log_handler = PPBLogHandler(console=self.console)
+        self.logger.addHandler(self.ppb_tui_log_handler)
         self.version = version
         self.backend = ppb_backend.PasswordBookSystem()
         self.data: dict = {}
@@ -292,16 +346,24 @@ class PasswordBook:
             content = Renderables(
                 [infos, info_rule, Text("無資料", style=Style(italic=True))]
             )
-        # self.console.print(
-        #     Panel(
-        #         content,
-        #         title=Text(PROJECT_NAME, style=Style(color="purple", bold=True)),
-        #         height=self.console.size.height - 3,
-        #     )
-        # )
+        layout = Layout()
+        layout.split_row(
+            Panel(content, title="資料", width=int((self.console.size.width - 8) / 2))
+        )
+        # 使用新的Rich日誌Handler獲取日誌內容
+        log_content = self.ppb_tui_log_handler.get_log_content()
+        log_panel = Panel(
+            log_content,
+            title="日志",
+            width=int((self.console.size.width - 8) / 2),
+            # height=15,  # 設定固定高度
+        )
+        i = Layout()
+        i.split_row(log_panel)
+        layout.add_split(i)
         self.console.print(
             Panel(
-                content,
+                layout,
                 title=Text(
                     PROJECT_NAME, style=Style(color="rgb(175, 0, 255)", bold=True)
                 ),
@@ -434,6 +496,8 @@ class PasswordBook:
         self.console.print(self.acc_tree(app, acc))
         if Confirm.ask("是否要刪除？") is True:
             self.backend.password_book_delete(app, acc)
+            self.get_backend_data()
+            self.logger.info(f"已刪除應用程式「{app}」的帳號「{acc}」。")
             self.console.print("已完成刪除。")
             time.sleep(1)
         else:

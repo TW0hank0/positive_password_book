@@ -16,6 +16,8 @@ def main():
                     os.path.join(os.path.dirname(__file__), "..", "dist", i)
                 )
                 break
+        else:
+            raise FileNotFoundError
     if len(sys.argv) >= 2 and sys.argv[1] != "--pre":
         ver = sys.argv[1]
     else:

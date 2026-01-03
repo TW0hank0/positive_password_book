@@ -58,7 +58,7 @@ class PasswordBookSystem:
         else:
             self._data[app_name] = [app_data]
 
-    def password_book_delete(self, app_name: str, acc: str):
+    def password_book_delete(self, app_name: str, acc: str) -> None:
         #
         ArgType("app_name", app_name, str)
         ArgType("acc", acc, str)
@@ -83,8 +83,25 @@ class PasswordBookSystem:
             else:
                 raise IndexError()
 
+    def password_book_move_to_trash_can(self, app: str, acc: str):
+        if app in list(self._data.keys()):
+            for i in self._data[app]:
+                if i["acc"] == acc:
+                    break
+            else:
+                raise IndexError()
+        else:
+            raise KeyError()
+
     def password_book_get_data(self) -> dict:
         return self._data
+
+    def password_book_search(self, app: str) -> list | None:
+        if app != "trash_can" and app in list(self._data.keys()):
+            app_datas: list = self._data[app]
+            return app_datas
+        else:
+            return None
 
     def __str__(self) -> str:
         return f"""PasswordBookSystem(_data={self._data})"""
