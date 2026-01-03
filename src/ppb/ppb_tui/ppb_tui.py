@@ -97,11 +97,10 @@ class PPBLogHandler(logging.Handler):
             self.handleError(record)
 
     def get_log_content(self):
-        renderables = Renderables()
-
+        # renderables = Renderables()
+        renderables_list = []
         # 只顯示最新的10條日誌
         recent_logs = self.logs[-10:] if len(self.logs) > 10 else self.logs
-
         for log in recent_logs:
             # 根據日誌等級設置顏色
             if "ERROR" in log or "CRITICAL" in log:
@@ -112,10 +111,9 @@ class PPBLogHandler(logging.Handler):
                 log_text = Text(log, style=Style(color="blue"))
             else:
                 log_text = Text(log, style=Style(color="white"))
-
-            renderables.append(log_text)
-
-        return renderables
+            renderables_list.append(log_text)
+        renderables_list.reverse()
+        return Renderables(renderables_list)
 
     def get_logs(self) -> list:
         """獲取所有日誌（保持原有方法兼容）"""
@@ -303,30 +301,30 @@ class PasswordBook:
         # table.add_column("user_note", header_style=header_style, min_width=10)
         # table.add_column("note", header_style=header_style, min_width=10)
         #
-        page_info = Text(
-            f"第{self.page_num}頁，共{self.page_max_num}頁", style="", end=""
-        )
+        page_info = Text(f"第{self.page_num}頁，共{self.page_max_num}頁", style=Style())
         version_text = f"版本： {self.version}"
-        version_info = Text(
-            (
-                " "
-                * (
-                    int(
-                        (
-                            self.console.size.width
-                            - 4
-                            - (len(str(page_info)) + 5)
-                            - (len(version_text) + 3)
-                        )
-                        / 2
-                    )
-                    - int((len(version_text) + 3) / 2)
-                )
-            )
-            + version_text
-        )
+        # version_info = Text(
+        #     (
+        #         " "
+        #         * (
+        #             int(
+        #                 (
+        #                     self.console.size.width
+        #                     - 4
+        #                     - (len(str(page_info)) + 5)
+        #                     - (len(version_text) + 3)
+        #                 )
+        #                 / 2
+        #             )
+        #             - int((len(version_text) + 3) / 2)
+        #         )
+        #     )
+        #     + version_text
+        # )
+        version_info = Text(version_text, justify="center")
+        # self.console.print(version_info)
         info_rule = Rule(style=Style(color="green", dim=True))
-        infos = Renderables([page_info, version_info])
+        infos = Renderables([page_info])
         #
         if len(self.pages) > 0 and self.page_max_num > 0:
             tree = Tree("資料", style=Style(color="bright_blue", bold=True))
@@ -346,24 +344,37 @@ class PasswordBook:
             content = Renderables(
                 [infos, info_rule, Text("無資料", style=Style(italic=True))]
             )
+        # log_panel_width = int(self.console.size.width / 3)
+        log_panel_width = 25
+        # content_panel_width = (log_panel_width * 2) + (
+        #     (self.console.size.width - 4) - (log_panel_width * 2)
+        # )
+        content_panel_width = self.console.width - 25
         layout = Layout()
         layout.split_row(
-            Panel(content, title="資料", width=int((self.console.size.width - 8) / 2))
+            Panel(
+                content,
+                title="資料",
+                width=content_panel_width,
+                height=self.console.size.height - 7,
+            )
         )
-        # 使用新的Rich日誌Handler獲取日誌內容
         log_content = self.ppb_tui_log_handler.get_log_content()
         log_panel = Panel(
             log_content,
             title="日志",
-            width=int((self.console.size.width - 8) / 2),
+            width=log_panel_width,
+            height=self.console.size.height - 7,
+            # width=int((self.console.size.width - 4) / 3),
             # height=15,  # 設定固定高度
         )
-        i = Layout()
+        i = Layout(size=log_panel_width)
         i.split_row(log_panel)
         layout.add_split(i)
+        all_contents = Renderables([version_info, layout])
         self.console.print(
             Panel(
-                layout,
+                all_contents,
                 title=Text(
                     PROJECT_NAME, style=Style(color="rgb(175, 0, 255)", bold=True)
                 ),
