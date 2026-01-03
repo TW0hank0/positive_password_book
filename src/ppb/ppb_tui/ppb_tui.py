@@ -145,7 +145,7 @@ class PasswordBook:
         self.setting = {}
         self.setting_init_dict = {}
         self.setting_file_path = os.path.abspath(
-            os.path.join(project_path, "setting.json")
+            os.path.join(project_path, "setting_tui.json")
         )
         self.setting_init()
         self.left_change_unsave: bool = False
@@ -449,6 +449,9 @@ class PasswordBook:
         self.console.print(tree)
         if Confirm.ask("是否正確： ", console=self.console):
             self.backend.password_book_insert(app_name, acc, pwd)
+            self.logger.info(
+                f"新增：應用程式「{app_name}」、帳號「{acc}」、密碼「{pwd}」。"
+            )
             self.backend_save_data()
             self.get_backend_data()
             self.backend_save_data()
