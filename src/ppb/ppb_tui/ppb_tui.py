@@ -85,14 +85,11 @@ class PPBLogHandler(logging.Handler):
     def emit(self, record):
         try:
             msg = self.format(record)
-
             # 添加到日誌列表
             self.logs.append(msg)
-
             # 限制日誌數量
             if len(self.logs) > self.max_logs:
                 self.logs.pop(0)
-
         except Exception:
             self.handleError(record)
 
@@ -100,13 +97,17 @@ class PPBLogHandler(logging.Handler):
         # renderables = Renderables()
         renderables_list = []
         # 只顯示最新的10條日誌
-        recent_logs = self.logs[-10:] if len(self.logs) > 10 else self.logs
+        recent_logs: list = self.logs[-10:] if len(self.logs) > 10 else self.logs
         for log in recent_logs:
             # 根據日誌等級設置顏色
-            if "ERROR" in log or "CRITICAL" in log:
-                log_text = Text(log, style=Style(color="red"))
+            if "CRITICAL" in log:
+                log_text = Text(log, style=Style(color="bright_red", bold=True))
+            elif "ERROR" in log:
+                log_text = Text(log, style=Style(color="bright_red"))
             elif "WARNING" in log:
-                log_text = Text(log, style=Style(color="yellow"))
+                log_text = Text(log, style=Style(color="bright_yellow"))
+            elif "INFO" in log:
+                log_text = Text(log, style=Style(color="yellow", dim=True))
             elif "DEBUG" in log:
                 log_text = Text(log, style=Style(color="blue"))
             else:
@@ -345,11 +346,11 @@ class PasswordBook:
                 [infos, info_rule, Text("無資料", style=Style(italic=True))]
             )
         # log_panel_width = int(self.console.size.width / 3)
-        log_panel_width = 25
+        log_panel_width = int(self.console.size.width / 3)
         # content_panel_width = (log_panel_width * 2) + (
         #     (self.console.size.width - 4) - (log_panel_width * 2)
         # )
-        content_panel_width = self.console.width - 25
+        content_panel_width = self.console.width - log_panel_width
         layout = Layout()
         layout.split_row(
             Panel(
@@ -703,7 +704,7 @@ def launcher():
     import os
     import datetime
 
-    from ... import ppb  # ty:ignore[unresolved-import]
+    from ... import ppb
 
     log_dir = os.path.join(project_path, ".logs")
     if os.path.exists(log_dir) is False or os.path.isdir(log_dir) is False:
