@@ -109,7 +109,7 @@ requires-dist = [
     { name = "pyinstaller", marker = "extra == 'build'", specifier = ">=6.17.0" },
     { name = "pyside6", marker = "extra == 'gui'", specifier = ">=6.10.1" },
     { name = "rich", marker = "extra == 'tui'", specifier = ">=14.2.0" },
-    { name = "typer", specifier = ">=0.20.1" },
+    { name = "typer", specifier = "~=0.20.1" },
 ]
 provides-extras = ["tui", "gui", "build"]
 

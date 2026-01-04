@@ -363,7 +363,7 @@ class PasswordBook:
         log_content = self.ppb_tui_log_handler.get_log_content()
         log_panel = Panel(
             log_content,
-            title="日志",
+            title="日誌",
             width=log_panel_width,
             height=self.console.size.height - 7,
             # width=int((self.console.size.width - 4) / 3),
