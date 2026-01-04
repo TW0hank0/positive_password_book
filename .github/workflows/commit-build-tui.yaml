@@ -7,7 +7,7 @@ on:
   push:
 
 jobs:
-  build_wheel:
+  build_exec:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
