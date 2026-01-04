@@ -1,11 +1,11 @@
 [project]
 name = "positive-password-book"
 version = "0.1.0"
-description = "`positive_password_book`"
+description = "一個python寫的密碼本"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "typer>=0.20.1",
+    "typer~=0.20.1",
     "positive_tool @ https://github.com/TW0hank0/positive_tool/releases/download/v0.6.0/positive_tool-0.6.0-py3-none-any.whl",
 ]
 
@@ -13,6 +13,12 @@ dependencies = [
 tui = ["rich>=14.2.0"]
 gui = ["pyside6>=6.10.1"]
 build = ["pyinstaller>=6.17.0"]
+
+[project.urls]
+Homepage = "https://github.com/TW0hank0/positive_password_book/"
+"Source Code" = "https://github.com/TW0hank0/positive_password_book/"
+"Bug Tracker" = "https://github.com/TW0hank0/positive_password_book/issues/"
+#Documentation = "https://github.com/TW0hank0/positive_password_book/"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
