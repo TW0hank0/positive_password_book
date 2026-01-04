@@ -34,7 +34,9 @@ def main(app_mode: Literal["tui", "gui"] = "tui"):
     time_now = datetime.datetime.now()
     time_format_str = time_now.strftime("%Y-%m-%d_%H-%M-%S")
     log_file_path = os.path.join(log_dir, f"log_{time_format_str}.log")
-    logger = pt.build_logger(log_file_path, f"{PROJECT_NAME}_logger")
+    logger = pt.build_logger(
+        log_file_path, f"{PROJECT_NAME}_logger", log_level_console=30
+    )
     if logger is None:
         raise RuntimeError("日志系統初始化失敗！")
     if app_mode == "gui":

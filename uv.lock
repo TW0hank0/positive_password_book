@@ -85,7 +85,7 @@ wheels = [
 
 [[package]]
 name = "positive-password-book"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "positive-tool" },
@@ -105,7 +105,7 @@ tui = [
 
 [package.metadata]
 requires-dist = [
-    { name = "positive-tool", url = "https://github.com/TW0hank0/positive_tool/releases/download/v0.6.0/positive_tool-0.6.0-py3-none-any.whl" },
+    { name = "positive-tool", url = "https://github.com/TW0hank0/positive_tool/releases/download/v0.6.1/positive_tool-0.6.0-py3-none-any.whl" },
     { name = "pyinstaller", marker = "extra == 'build'", specifier = ">=6.17.0" },
     { name = "pyside6", marker = "extra == 'gui'", specifier = ">=6.10.1" },
     { name = "rich", marker = "extra == 'tui'", specifier = ">=14.2.0" },
@@ -116,12 +116,12 @@ provides-extras = ["tui", "gui", "build"]
 [[package]]
 name = "positive-tool"
 version = "0.6.0"
-source = { url = "https://github.com/TW0hank0/positive_tool/releases/download/v0.6.0/positive_tool-0.6.0-py3-none-any.whl" }
+source = { url = "https://github.com/TW0hank0/positive_tool/releases/download/v0.6.1/positive_tool-0.6.0-py3-none-any.whl" }
 dependencies = [
     { name = "rich" },
 ]
 wheels = [
-    { url = "https://github.com/TW0hank0/positive_tool/releases/download/v0.6.0/positive_tool-0.6.0-py3-none-any.whl", hash = "sha256:a50778db46424643b3f67a0157a7d2de146b1e9ec4a94a489c6901103c473a9e" },
+    { url = "https://github.com/TW0hank0/positive_tool/releases/download/v0.6.1/positive_tool-0.6.0-py3-none-any.whl", hash = "sha256:7dbce94c3ae9f8a2be59f5006133ea1dbb643ad9dbffef3be44b7531ddf1cdb7" },
 ]
 
 [package.metadata]

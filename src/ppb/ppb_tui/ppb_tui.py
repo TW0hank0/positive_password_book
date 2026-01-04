@@ -3,9 +3,8 @@ import time
 import os
 import sys
 import logging
-import queue
 
-from typing import List
+from typing import Literal, Any
 
 from rich.console import Console
 from rich.panel import Panel
@@ -42,7 +41,7 @@ class PPBActionPrompt(PromptBase[str]):
         *,
         console: Console | None = None,
         password: bool = False,
-        choices: List[str] | None = ["新增", "刪除", "離開"],
+        choices: list[str] | None = ["新增", "刪除", "離開"],
         case_sensitive: bool = True,
         show_default: bool = True,
         show_choices: bool = True,
@@ -69,8 +68,6 @@ class PPBActionPrompt(PromptBase[str]):
 
 
 class PPBLogHandler(logging.Handler):
-    """專為Rich Console設計的Log Handler"""
-
     def __init__(self, console: Console, level=logging.INFO):
         super().__init__(level)
         self.console = console
@@ -121,6 +118,70 @@ class PPBLogHandler(logging.Handler):
         return self.logs.copy()
 
 
+class PPBSetting:  # TODO: 待轉成GUI、TUI通用，移到ppb_backend
+    init_setting: dict = {"acc_tree__tree_type": "same_line"}
+
+    def __init__(
+        self,
+        setting_file_path: str | os.PathLike,
+        logger: logging.Logger,
+        mode: Literal["load", "new", "auto"] = "auto",
+    ) -> None:
+        #
+        ArgType("setting_file_path", setting_file_path, [str, os.PathLike])
+        ArgType("mode", mode, ["load", "new", "auto"])
+        #
+        self.setting_file_path: str = str(setting_file_path)
+        self.logger: logging.Logger = logger
+        self.data: dict[str, Any] = self.init_setting.copy()
+        #
+        if mode == "auto":
+            self.setting_auto()
+
+    def setting_load(self) -> None:
+        if (
+            os.path.exists(self.setting_file_path) is True
+            and os.path.isfile(self.setting_file_path) is True
+            and (
+                self._bytes_to_mb(os.path.getsize(self.setting_file_path)) < 10
+            )  # 確保檔案不會過大
+        ):
+            with open(self.setting_file_path, "r", encoding="utf-8") as f:
+                try:
+                    setting_file = json.load(f)
+                except json.JSONDecodeError as e:
+                    self.logger.error(f"設定解析錯誤：{e}")
+                else:
+                    self.data.update(
+                        setting_file
+                    )  # TODO: 待增加key、value判定（數據類型、合法key）
+            return None
+
+    def setting_auto(self):
+        if os.path.exists(self.setting_file_path) is True and os.path.isfile(
+            self.setting_file_path
+        ):
+            self.setting_load()
+        else:
+            self.setting_save()
+
+    def setting_save(self) -> None:
+        with open(self.setting_file_path, "w", encoding="utf-8") as f:
+            json.dump(self.data, f, ensure_ascii=False, sort_keys=True)
+
+    def _bytes_to_mb(self, bytes: int) -> float:
+        return (bytes / 1000) / 1000
+
+    def __getitem__(self, key: str):
+        ArgType("key", key, [str])
+        #
+        if key in list(self.data.keys()):
+            return self.data[key]
+        else:
+            self.logger.error(f"找不到設定的key：{key}")
+            sys.exit(1)
+
+
 class PasswordBook:
     def __init__(self, logger: logging.Logger, version) -> None:
         self.console = Console()
@@ -131,7 +192,7 @@ class PasswordBook:
         self.backend = ppb_backend.PasswordBookSystem()
         self.data: dict = {}
         self.pages: list = []
-        self.data_file_path = os.path.abspath(
+        self.data_file_path: str = os.path.abspath(
             os.path.join(project_path, "password_data.json")
         )
         if os.path.isfile(self.data_file_path) is True:
@@ -143,12 +204,13 @@ class PasswordBook:
                 sys.exit(1)
         else:
             self.backend.password_book_new()
-        self.setting = {}
-        self.setting_init_dict = {}
+        # self.setting = {}
+        # self.setting_init_dict = {}
         self.setting_file_path = os.path.abspath(
             os.path.join(project_path, "setting_tui.json")
         )
-        self.setting_init()
+        self.setting = PPBSetting(self.setting_file_path, self.logger)
+        # self.setting_init()
         self.left_change_unsave: bool = False
         self.content_per_page = self.console.size.height - 8 - 3
         self.page_num = 0
@@ -159,24 +221,24 @@ class PasswordBook:
         #
         self.main()
 
-    def setting_load(self):
-        with open(self.setting_file_path, "r", encoding="utf-8") as f:
-            setting_file = json.load(f)
-        self.setting.update(setting_file)
+    # def setting_load(self):
+    #     with open(self.setting_file_path, "r", encoding="utf-8") as f:
+    #         setting_file = json.load(f)
+    #     self.setting.update(setting_file)
 
-    def setting_init(self):
-        self.setting_init_dict["acc_tree__tree_type"] = "same_line"
-        if os.path.exists(self.setting_file_path) is True and os.path.isfile(
-            self.setting_file_path
-        ):
-            self.setting_load()
-        else:
-            self.setting.update(self.setting_init_dict)
-            self.setting_save()
+    # def setting_init(self):
+    #     self.setting_init_dict["acc_tree__tree_type"] = "same_line"
+    #     if os.path.exists(self.setting_file_path) is True and os.path.isfile(
+    #         self.setting_file_path
+    #     ):
+    #         self.setting_load()
+    #     else:
+    #         self.setting.update(self.setting_init_dict)
+    #         self.setting_save()
 
-    def setting_save(self):
-        with open(self.setting_file_path, "w", encoding="utf-8") as f:
-            json.dump(self.setting, f, ensure_ascii=False, sort_keys=True)
+    # def setting_save(self):
+    #     with open(self.setting_file_path, "w", encoding="utf-8") as f:
+    #         json.dump(self.setting, f, ensure_ascii=False, sort_keys=True)
 
     def get_backend_data(self):
         # if self.data is None:
@@ -556,7 +618,10 @@ class PasswordBook:
                 tree_acc.add(
                     Text("密碼：", style=key_style) + Text(pwd, style=value_style)
                 )
-            else:
+            elif (
+                self.setting["acc_tree__tree_type"] == "new_line"
+                or self.setting["acc_tree__tree_type"] == "old_style"
+            ):
                 tree_acc_key = tree.add("帳號", style=key_style)
                 tree_acc_value = tree_acc_key.add(acc, style=value_style)
                 tree_acc_value.add("密碼", style=key_style).add(pwd, style=value_style)

@@ -7,7 +7,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "typer~=0.20.1",
-    "positive_tool @ https://github.com/TW0hank0/positive_tool/releases/download/v0.6.0/positive_tool-0.6.0-py3-none-any.whl",
+    "positive_tool @ https://github.com/TW0hank0/positive_tool/releases/download/v0.6.1/positive_tool-0.6.0-py3-none-any.whl",
 ]
 
 [project.optional-dependencies]
