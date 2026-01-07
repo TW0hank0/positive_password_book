@@ -161,7 +161,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           cd ci
-          datetime=$(uv run python get_datetime.py)
+          datetime=$(uv run get_datetime.py)
           echo "datetime=$datetime" >> $GITHUB_OUTPUT
           cd ..
 
@@ -170,7 +170,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           cd ci
-          $datetime = uv run python get_datetime.py
+          $datetime = uv run get_datetime.py
           echo "datetime=$datetime" >> $env:GITHUB_OUTPUT
           cd ..
 
@@ -205,7 +205,7 @@ jobs:
             **這是測試版，使用github action製作**
             - 系統： ${{ matrix.os }}
             - 版本： ${{ steps.get_version_windows.outputs.version }}
-            - UTC時間： ${{ steps.get_datetime_windows.outputs.datetime }}
-            > 臺北時間：UTC+8
+            - 臺北時間： ${{ steps.get_datetime_windows.outputs.datetime }}
+            > UTC時間：臺北時間-8
             - github_sha（前7個）： ${{ steps.get_sha_windows.outputs.short_sha }}
             - github_sha（完整）： $env:GITHUB_SHA
