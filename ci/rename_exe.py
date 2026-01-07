@@ -18,6 +18,10 @@ def main():
                 break
         else:
             raise FileNotFoundError
+    if len(sys.argv) >= 4 and sys.argv[3] != "--pre":
+        pyver = sys.argv[3]
+    else:
+        pyver = "unknown"
     if len(sys.argv) >= 2 and sys.argv[1] != "--pre":
         ver = sys.argv[1]
     else:
@@ -28,14 +32,14 @@ def main():
     root, ext = os.path.splitext(os.path.basename(orig))
     if ext == "" or ext is None:
         if "--pre" in sys.argv:
-            new_name = f"{root}_{sys.argv[3]}_pre-{ver}"
+            new_name = f"{root}_{pyver}_pre-{ver}"
         else:
-            new_name = f"{root}_{sys.argv[3]}_{ver}"
+            new_name = f"{root}_{pyver}_{ver}"
     else:
         if "--pre" in sys.argv:
-            new_name = f"{root}_{sys.argv[3]}_pre-{ver}{ext}"
+            new_name = f"{root}_{pyver}_pre-{ver}{ext}"
         else:
-            new_name = f"{root}_{sys.argv[3]}_{ver}{ext}"
+            new_name = f"{root}_{pyver}_{ver}{ext}"
     if platform.platform() == "Linux":
         new_name = f"{new_name}.bin"
     new_path = os.path.join(os.path.dirname(orig), new_name)
