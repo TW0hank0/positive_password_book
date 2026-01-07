@@ -674,7 +674,7 @@ class PasswordBook:
                     is_user_input_error = True
                 else:
                     break
-            if user_action not in user_action:
+            if user_action not in actions:
                 is_user_input_error = True
             else:
                 if user_action in ["新增", "add", "a"]:
