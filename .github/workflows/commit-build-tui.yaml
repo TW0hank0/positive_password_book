@@ -170,7 +170,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           cd ci
-          $datetime = uv run get_datetime.py
+          $datetime = uv run --with tzdata get_datetime.py
           echo "datetime=$datetime" >> $env:GITHUB_OUTPUT
           cd ..
 
