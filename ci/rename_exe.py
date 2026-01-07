@@ -5,7 +5,6 @@ import platform
 
 
 def main():
-    print(f"\n{sys.argv}\n")
     if len(sys.argv) >= 3 and sys.argv[2] != "--pre":
         orig = os.path.abspath(sys.argv[2])
     else:
