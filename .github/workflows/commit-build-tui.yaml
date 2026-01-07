@@ -38,14 +38,14 @@ jobs:
         uses: actions/upload-artifact@v4
         if: runner.os == 'Windows'
         with:
-          name: positive_password_book_launch_tui.exe
+          name: positive_password_book_launch_tui_${{ matrix.python }}.exe
           path: dist/*
 
       - name: Upload exe artifact (Linux)
         uses: actions/upload-artifact@v4
         if: runner.os == 'Linux'
         with:
-          name: positive_password_book_launch_tui
+          name: positive_password_book_launch_tui_${{ matrix.python }}
           path: dist/*
 
       - name: Prepare CI Venv (Linux)
@@ -152,7 +152,7 @@ jobs:
           PYVER: ${{ matrix.python }}
         run: |
           cd ci
-          $exe_path = uv run rename_exe.py $VER $ORIG $PYVER --pre
+          $exe_path = uv run rename_exe.py $VER $ORIG ${{ matrix.python }} --pre
           echo "exe_path=$exe_path" >> $env:GITHUB_OUTPUT
           cd ..
 
