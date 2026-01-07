@@ -139,9 +139,10 @@ jobs:
         env:
           ORIG: ${{ steps.find_exe_windows.outputs.exe_path }}
           VER: ${{ steps.get_version_windows.outputs.version }}
+          PYVER: ${{ matrix.python }}
         run: |
           cd ci
-          $exe_path = uv run rename_exe.py $VER $ORIG ${{ matrix.python }} --pre
+          $exe_path = uv run rename_exe.py $VER $ORIG $PYVER --pre
           echo "exe_path=$exe_path" >> $env:GITHUB_OUTPUT
           cd ..
 
@@ -150,7 +151,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           cd ci
-          datetime=$(uv run python -c "import datetime; print(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))")
+          datetime=$(uv run python -c "from zoneinfo import Zoneinfo;import datetime; print(datetime.datetime.now(tzinfo=Zoneinfo('Asia/Taipei')).strftime('%Y-%m-%d_%H-%M-%S'))")
           echo "datetime=$datetime" >> $GITHUB_OUTPUT
           cd ..
 
@@ -159,7 +160,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           cd ci
-          $datetime = uv run python -c "import datetime; print(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))"
+          $datetime = uv run python -c "from zoneinfo import Zoneinfo;import datetime; print(datetime.datetime.now(tzinfo=Zoneinfo('Asia/Taipei')).strftime('%Y-%m-%d_%H-%M-%S'))"
           echo "datetime=$datetime" >> $env:GITHUB_OUTPUT
           cd ..
 
