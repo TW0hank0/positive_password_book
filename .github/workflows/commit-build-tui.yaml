@@ -151,7 +151,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           cd ci
-          datetime=$(uv run python -c "from zoneinfo import Zoneinfo;import datetime; print(datetime.datetime.now(tzinfo=Zoneinfo('Asia/Taipei')).strftime('%Y-%m-%d_%H-%M-%S'))")
+          datetime=$(uv run python -c "from zoneinfo import ZoneInfo;import datetime; print(datetime.datetime.now(tzinfo=ZoneInfo('Asia/Taipei')).strftime('%Y-%m-%d_%H-%M-%S'))")
           echo "datetime=$datetime" >> $GITHUB_OUTPUT
           cd ..
 
@@ -160,7 +160,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           cd ci
-          $datetime = uv run python -c "from zoneinfo import Zoneinfo;import datetime; print(datetime.datetime.now(tzinfo=Zoneinfo('Asia/Taipei')).strftime('%Y-%m-%d_%H-%M-%S'))"
+          $datetime = uv run python -c "from zoneinfo import ZoneInfo;import datetime; print(datetime.datetime.now(tzinfo=ZoneInfo('Asia/Taipei')).strftime('%Y-%m-%d_%H-%M-%S'))"
           echo "datetime=$datetime" >> $env:GITHUB_OUTPUT
           cd ..
 
