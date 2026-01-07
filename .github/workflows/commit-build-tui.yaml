@@ -152,7 +152,7 @@ jobs:
           PYVER: ${{ matrix.python }}
         run: |
           cd ci
-          $exe_path = uv run rename_exe.py $VER $ORIG ${{ matrix.python }} --pre
+          $exe_path = uv run rename_exe.py ${{ steps.get_version_windows.outputs.version }} ${{ steps.find_exe_windows.outputs.exe_path }} ${{ matrix.python }} --pre
           echo "exe_path=$exe_path" >> $env:GITHUB_OUTPUT
           cd ..
 
