@@ -48,10 +48,20 @@ jobs:
           name: positive_password_book_launch_tui
           path: dist/*
 
-      - name: Prepare CI Venv
+      - name: Prepare CI Venv (Linux)
+        if: runner.os == 'Linux'
         run: |
           cd ci
           uv venv --python cpython-3.13
+          cd ..
+
+      - name: Prepare CI Venv (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd ci
+          uv venv --python cpython-3.13
+          uv pip install tzdata
           cd ..
 
       - name: Get package version (Linux)
