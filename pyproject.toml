@@ -4,7 +4,7 @@ version = "0.2.0"
 license = "AGPL-3.0-only"
 description = "一個密碼本"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
     "typer~=0.20.1",
     "positive_tool @ https://github.com/TW0hank0/positive_tool/releases/download/v0.6.1/positive_tool-0.6.0-py3-none-any.whl",
