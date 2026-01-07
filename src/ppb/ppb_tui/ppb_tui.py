@@ -674,19 +674,22 @@ class PasswordBook:
                     is_user_input_error = True
                 else:
                     break
-            if user_action in ["新增", "add", "a"]:
-                self.insert_appdata()
-            elif user_action in ["刪除", "delete", "d"]:
-                self.delete_appdata()
-            elif user_action in ["離開", "quit", "q"]:
-                break
-            elif user_action in ["重新整理", "refresh", "r"]:
-                self.get_backend_data()
-                self.refresh_page()
-            elif user_action in ["關於", "about"]:
-                self.about_page()
-            else:
+            if user_action not in user_action:
                 is_user_input_error = True
+            else:
+                if user_action in ["新增", "add", "a"]:
+                    self.insert_appdata()
+                elif user_action in ["刪除", "delete", "d"]:
+                    self.delete_appdata()
+                elif user_action in ["離開", "quit", "q"]:
+                    break
+                elif user_action in ["重新整理", "refresh", "r"]:
+                    self.get_backend_data()
+                    self.refresh_page()
+                elif user_action in ["關於", "about"]:
+                    self.about_page()
+                else:
+                    is_user_input_error = True
                 # self.logger.warning(f"未知動作！錯誤：{user_action}")
         self.close()
 
