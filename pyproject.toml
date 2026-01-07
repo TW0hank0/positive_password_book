@@ -2,7 +2,7 @@
 name = "positive-password-book"
 version = "0.2.0"
 license = "AGPL-3.0-only"
-description = "一個python寫的密碼本"
+description = "一個密碼本"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

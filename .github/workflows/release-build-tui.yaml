@@ -97,7 +97,7 @@ jobs:
           VER: ${{ steps.get_version_linux.outputs.version }}
         run: |
           cd ci
-          exe_path=$(python rename_exe.py $VER $ORIG)
+          exe_path=$(python rename_exe.py $VER $ORIG ${{ matrix.python }})
           echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
           cd ..
 
@@ -110,7 +110,7 @@ jobs:
           VER: ${{ steps.get_version_windows.outputs.version }}
         run: |
           cd ci
-          $exe_path = uv run rename_exe.py $VER $ORIG
+          $exe_path = uv run rename_exe.py $VER $ORIG ${{ matrix.python }}
           echo "exe_path=$exe_path" >> $env:GITHUB_OUTPUT
           cd ..
 

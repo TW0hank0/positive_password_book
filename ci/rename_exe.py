@@ -28,14 +28,14 @@ def main():
     root, ext = os.path.splitext(os.path.basename(orig))
     if ext == "" or ext is None:
         if "--pre" in sys.argv:
-            new_name = f"{root}_pre-{ver}"
+            new_name = f"{root}_{sys.argv[3]}_pre-{ver}"
         else:
-            new_name = f"{root}_{ver}"
+            new_name = f"{root}_{sys.argv[3]}_{ver}"
     else:
         if "--pre" in sys.argv:
-            new_name = f"{root}_pre-{ver}{ext}"
+            new_name = f"{root}_{sys.argv[3]}_pre-{ver}{ext}"
         else:
-            new_name = f"{root}_{ver}{ext}"
+            new_name = f"{root}_{sys.argv[3]}_{ver}{ext}"
     if platform.platform() == "Linux":
         new_name = f"{new_name}.bin"
     new_path = os.path.join(os.path.dirname(orig), new_name)

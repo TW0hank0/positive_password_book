@@ -16,6 +16,7 @@ from rich.rule import Rule
 from rich.layout import Layout
 from rich.tree import Tree
 from rich.containers import Renderables
+from rich.color import Color
 
 
 from positive_tool import pt
@@ -41,7 +42,7 @@ class PPBActionPrompt(PromptBase[str]):
         *,
         console: Console | None = None,
         password: bool = False,
-        choices: list[str] | None = ["新增", "刪除", "離開"],
+        choices: list[str] | None = None,
         case_sensitive: bool = True,
         show_default: bool = True,
         show_choices: bool = True,
@@ -58,13 +59,16 @@ class PPBActionPrompt(PromptBase[str]):
         # self.choice: list[str] = ["新增", "刪除", "離開"]
 
     def process_response(self, value: str) -> str:
-        if value in self.choices or value in ["debug"]:  # type: ignore
-            return value
-        else:
-            raise ValueError(f"在{len(self.choices)}個動作中選擇一個動作！")  # type: ignore
-
-    def check_choice(self, value: str) -> bool:
-        return value in self.choices  # type: ignore
+        return value
+        # if (
+        #     value is not None
+        #     and type(value) is str
+        #     and value in self.choices
+        #     or value in ["debug"]
+        # ):  # type: ignore
+        #     return value
+        # else:
+        #     raise ValueError(f"在{len(self.choices)}個動作中選擇一個動作！")
 
 
 class PPBLogHandler(logging.Handler):
@@ -167,7 +171,7 @@ class PPBSetting:  # TODO: 待轉成GUI、TUI通用，移到ppb_backend
 
     def setting_save(self) -> None:
         with open(self.setting_file_path, "w", encoding="utf-8") as f:
-            json.dump(self.data, f, ensure_ascii=False, sort_keys=True)
+            json.dump(self.data, f, ensure_ascii=False, sort_keys=True, indent=4)
 
     def _bytes_to_mb(self, bytes: int) -> float:
         return (bytes / 1000) / 1000
@@ -248,32 +252,6 @@ class PasswordBook:
 
     def backend_save_data(self):
         self.backend.password_book_save(self.data_file_path)
-
-    def print_data_old2(self):
-        self.console.clear()
-        if self.data is None:
-            self.get_backend_data()
-        # data = self.backend.password_book_get_data()
-        table = Table()
-        header_style = Style(color="blue")
-        table.add_column("應用程式", min_width=15, header_style=header_style)
-        table.add_column("帳號", min_width=20, header_style=header_style)
-        table.add_column("密碼", min_width=20, header_style=header_style)
-        table.add_column("user_note", header_style=header_style, min_width=10)
-        table.add_column("note", header_style=header_style, min_width=10)
-        for app, app_datas in list(self.data.items()):  # type: ignore
-            if app == "trash_can":
-                continue
-            else:
-                for app_data in app_datas:
-                    table.add_row(app, app_data["acc"], app_data["pwd"])
-        self.console.print(
-            Panel(
-                table,
-                title=Text(PROJECT_NAME, style=Style(color="purple", bold=True)),
-                height=self.console.size.height - 3,
-            )
-        )
 
     def print_data_old(self):
         #
@@ -365,7 +343,7 @@ class PasswordBook:
         # table.add_column("note", header_style=header_style, min_width=10)
         #
         page_info = Text(f"第{self.page_num}頁，共{self.page_max_num}頁", style=Style())
-        version_text = f"版本： {self.version}"
+        version_text = f"版本：{self.version}"
         # version_info = Text(
         #     (
         #         " "
@@ -407,11 +385,7 @@ class PasswordBook:
             content = Renderables(
                 [infos, info_rule, Text("無資料", style=Style(italic=True))]
             )
-        # log_panel_width = int(self.console.size.width / 3)
         log_panel_width = int(self.console.size.width / 3)
-        # content_panel_width = (log_panel_width * 2) + (
-        #     (self.console.size.width - 4) - (log_panel_width * 2)
-        # )
         content_panel_width = self.console.width - log_panel_width
         layout = Layout()
         layout.split_row(
@@ -626,69 +600,55 @@ class PasswordBook:
                 tree_acc_value = tree_acc_key.add(acc, style=value_style)
                 tree_acc_value.add("密碼", style=key_style).add(pwd, style=value_style)
         return tree
-        #
-        # if acc is not None:
-        #     if (
-        #         app != "trash_can"
-        #         and app in list(self.data.keys())
-        #         and acc in [i["acc"] for i in self.data[app]]
-        #     ):
-        #         key_style = Style(color="blue")
-        #         value_style = Style(color="yellow")
-        #         tree = Tree(app, style=key_style)
-        #         if self.setting["acc_tree__tree_type"] == "same_line":
-        #             tree_acc = tree.add(
-        #                 Text("帳號：", style=key_style) + Text(acc, style=value_style)
-        #             )
-        #             for i in self.data[app]:
-        #                 if i["acc"] == acc:
-        #                     tree_acc.add(
-        #                         Text("密碼：", style=key_style)
-        #                         + Text(i["pwd"], style=value_style)
-        #                     )
-        #                     break
-        #         else:
-        #             tree_acc_key = tree.add("帳號", style=key_style)
-        #             tree_acc_value = tree_acc_key.add(acc, style=value_style)
-        #             for i in self.data[app]:
-        #                 if i["acc"] == acc:
-        #                     tree_acc_value.add("密碼", style=key_style).add(
-        #                         i["pwd"], style=value_style
-        #                     )
-        #                     break
-        #         return tree
-        #     else:
-        #         raise KeyError("找不到應用程式/帳號")
-        # else:
-        #     if app in list(self.data.keys()):
-        #         key_style = Style(color="blue")
-        #         value_style = Style(color="yellow")
-        #         tree = Tree(app, style=key_style)
-        #         app_datas = self.data[app]
-        #         for app_data in app_datas:
-        #             if self.setting["acc_tree__tree_type"] == "same_line":
-        #                 tree_acc = tree.add(
-        #                     Text("帳號：", style=key_style)
-        #                     + Text(app_data["acc"], style=value_style)
-        #                 )
-        #                 tree_acc.add(
-        #                     Text("密碼：", style=key_style)
-        #                     + Text(app_data["pwd"], style=value_style)
-        #                 )
-        #             else:
-        #                 tree_acc_key = tree.add("帳號", style=key_style)
-        #                 tree_acc_value = tree_acc_key.add(
-        #                     app_data["acc"], style=value_style
-        #                 )
-        #                 tree_acc_value.add("密碼", style=key_style).add(
-        #                     app_data["pwd"], style=value_style
-        #                 )
-        #         return tree
-        #     else:
-        #         raise KeyError("找不到應用程式！")
+
+    def about_page(self) -> None:
+        self.console.clear()
+        verion_info = Text(f"版本：{self.version}")
+        rule = Rule(style=Style(color="green", dim=True))
+        contents = Renderables([verion_info, rule])
+        panel = Panel(
+            contents,
+            title=(
+                Text(
+                    PROJECT_NAME,
+                    style=Style(color="rgb(175, 0, 255)", bold=True),
+                    end="",
+                )
+                + Text(" ─ ", style=Style(dim=True, color="yellow"), end="")
+                + Text("關於", style=Style(color="green"), end="")
+            ),
+            height=self.console.height - 2,
+        )
+        panel = Panel(
+            contents,
+            title=Text(
+                f"{Color.from_rgb(175, 0, 255)}{PROJECT_NAME} {Color.parse('yellow')}─ {Color.parse('default')}{Color.parse('green')}關於"
+            ),
+            height=self.console.height - 2,
+        )
+        self.console.print(panel)
+        # time.sleep(1)
+        # Prompt.ask("按enter返回...", console=self.console)
+        self.console.input("按enter返回...")
 
     def main(self):
         is_user_input_error = False
+        actions = [
+            "新增",
+            "add",
+            "a",
+            "刪除",
+            "delete",
+            "d",
+            "離開",
+            "quit",
+            "q",
+            "重新整理",
+            "refresh",
+            "r",
+            "關於",
+            "about",
+        ]
         self.console.clear()
         while True:
             while True:
@@ -696,20 +656,12 @@ class PasswordBook:
                 self.print_data()
                 if is_user_input_error is True:
                     self.console.print(
-                        "輸入錯誤：請從[bold]4[/bold]個動作中選擇一個！",
+                        "輸入錯誤：請從[bold]5[/bold]個動作中選擇一個！",
                         style=Style(blink=True, underline=True, color="red"),
                     )
                     is_user_input_error = False
-                # self.console.print(
-                # Text("輸入動作")
-                # + Text(
-                # "〔新增, 刪除, 離開, 重新整理〕",
-                # style=Style(color="bright_magenta"),
-                # ),
-                # end="",
-                # )
                 prompt = Text("輸入動作") + Text(
-                    "〔新增, 刪除, 離開, 重新整理〕",
+                    "〔新增, 刪除, 離開, 重新整理, 關於〕",
                     style=Style(color="bright_magenta"),
                 )
                 try:
@@ -717,34 +669,25 @@ class PasswordBook:
                         prompt=prompt,
                         console=self.console,
                         show_choices=False,
-                        choices=[
-                            "新增",
-                            "a",
-                            "刪除",
-                            "d",
-                            "離開",
-                            "q",
-                            "重新整理",
-                            "r",
-                        ],
                     )
                 except ValueError:
-                    # self.print_data()
                     is_user_input_error = True
                 else:
                     break
-            if user_action in ["新增", "a"]:
+            if user_action in ["新增", "add", "a"]:
                 self.insert_appdata()
-            elif user_action in ["刪除", "d"]:
-                # self.console.print("未完成功能！")
-                # time.sleep(2)
+            elif user_action in ["刪除", "delete", "d"]:
                 self.delete_appdata()
-            elif user_action in ["離開", "q"]:
+            elif user_action in ["離開", "quit", "q"]:
                 break
-            elif user_action in ["重新整理", "r"]:
+            elif user_action in ["重新整理", "refresh", "r"]:
                 self.get_backend_data()
                 self.refresh_page()
-                # self.console.print(self)
+            elif user_action in ["關於", "about"]:
+                self.about_page()
+            else:
+                is_user_input_error = True
+                # self.logger.warning(f"未知動作！錯誤：{user_action}")
         self.close()
 
     def __str__(self) -> str:
