@@ -16,7 +16,7 @@ from rich.rule import Rule
 from rich.layout import Layout
 from rich.tree import Tree
 from rich.containers import Renderables
-from rich.color import Color
+# from rich.color import Color
 
 
 from positive_tool import pt
@@ -216,14 +216,24 @@ class PasswordBook:
         self.setting = PPBSetting(self.setting_file_path, self.logger)
         # self.setting_init()
         self.left_change_unsave: bool = False
-        self.content_per_page = self.console.size.height - 8 - 3
+        self.content_per_page: int = self.console.size.height - 13
         self.page_num = 0
         self.page_max_num = 0
         #
+        self.init_color()
         self.get_backend_data()
         self.refresh_page()
         #
         self.main()
+
+    def init_color(self):
+        self.colors = {}
+        # tmp = {"purple": Color.from_rgb(175, 0, 255).get_ansi_codes()}
+        # for i in tmp:
+        #     tmp_color = ""
+        #     for i2 in tmp[i]:
+        #         tmp_color = tmp_color + f"\033[{i2}m"
+        #     self.colors[i] = tmp_color
 
     # def setting_load(self):
     #     with open(self.setting_file_path, "r", encoding="utf-8") as f:
@@ -369,17 +379,13 @@ class PasswordBook:
         #
         if len(self.pages) > 0 and self.page_max_num > 0:
             tree = Tree("資料", style=Style(color="bright_blue", bold=True))
-            app_rounded = []
             for app, app_data in self.pages[self.page_num - 1]:
                 self.logger.debug(f"app:{app}, app_data:{app_data}")
-                if app == "trash_can" or app in app_rounded:
+                if app == "trash_can":
                     continue
                 else:
-                    # table.add_row(app, app_data["acc"], app_data["pwd"])
-                    child_tree = self.acc_tree(app)
-                    self.logger.debug(f"child_tree： {child_tree}")
+                    child_tree = self.acc_tree(app, app_data["acc"])
                     tree.children.append(child_tree)
-                    app_rounded.append(app)
             content = Renderables([infos, info_rule, tree])
         else:
             content = Renderables(
@@ -416,11 +422,12 @@ class PasswordBook:
                     PROJECT_NAME, style=Style(color="rgb(175, 0, 255)", bold=True)
                 ),
                 height=self.console.size.height - 3,
+                border_style=Style(color="green"),
             )
         )
 
     def refresh_page(self):
-        if self.data is None:
+        if (self.data is None) or (isinstance(self.data, dict) is False):
             self.get_backend_data()
         #
         self.logger.debug(f"每頁內容數： {self.content_per_page}")
@@ -428,8 +435,6 @@ class PasswordBook:
         self.logger.debug(f"資料keys： {list(self.data.keys())}")
         #
         self.pages.clear()
-        # self.page_num = 1
-        # self.page_max_num = 0
         count = 1
         page: list = []
         for app in list(self.data.keys()):
@@ -439,7 +444,7 @@ class PasswordBook:
             for app_data in app_datas:
                 page.append((app, app_data))
                 self.logger.debug(f"page： {page}")
-                if count >= self.content_per_page:
+                if (count + 3) >= self.content_per_page:
                     self.pages.append(page.copy())
                     self.logger.debug(f"pages -> self.pages： {self.pages}")
                     page.clear()
@@ -564,15 +569,13 @@ class PasswordBook:
         var_app_data: list[tuple[str, str]] = []
         if acc is None:
             if app != "trash_can" and app in list(self.data.keys()):
-                for i in self.data:
-                    if i == app:
-                        for a in self.data[app]:
-                            var_app_data.append((a["acc"], a["pwd"]))
-                        break
-                else:
-                    raise KeyError("找不到應用程式/帳號")
+                for i in self.data[app]:
+                    var_app_data.append((i["acc"], i["pwd"]))
+                    break
             else:
-                raise KeyError("找不到應用程式/帳號")
+                msg = "找不到應用程式/帳號"
+                self.logger.error(msg, stack_info=True)
+                raise KeyError(msg)
         else:
             for i in self.data[app]:
                 if i["acc"] == acc:
@@ -608,28 +611,23 @@ class PasswordBook:
         contents = Renderables([verion_info, rule])
         panel = Panel(
             contents,
-            title=(
-                Text(
-                    PROJECT_NAME,
-                    style=Style(color="rgb(175, 0, 255)", bold=True),
-                    end="",
-                )
-                + Text(" ─ ", style=Style(dim=True, color="yellow"), end="")
-                + Text("關於", style=Style(color="green"), end="")
-            ),
-            height=self.console.height - 2,
-        )
-        panel = Panel(
-            contents,
             title=Text(
-                f"{Color.from_rgb(175, 0, 255)}{PROJECT_NAME} {Color.parse('yellow')}─ {Color.parse('default')}{Color.parse('green')}關於"
+                PROJECT_NAME,
+                style=Style(color="rgb(175, 0, 255)", bold=True),
             ),
+            subtitle=Text("關於", style=Style(color="green")),
             height=self.console.height - 2,
         )
         self.console.print(panel)
         # time.sleep(1)
         # Prompt.ask("按enter返回...", console=self.console)
         self.console.input("按enter返回...")
+
+    def next_page(self):
+        if (self.page_num + 1) <= self.page_max_num:
+            self.page_num += 1
+        else:
+            self.logger.warning(f"已到最後一頁！總頁數：{self.page_max_num}")
 
     def main(self):
         is_user_input_error = False
@@ -648,6 +646,8 @@ class PasswordBook:
             "r",
             "關於",
             "about",
+            "下一頁",
+            "next",
         ]
         self.console.clear()
         while True:
@@ -661,7 +661,7 @@ class PasswordBook:
                     )
                     is_user_input_error = False
                 prompt = Text("輸入動作") + Text(
-                    "〔新增, 刪除, 離開, 重新整理, 關於〕",
+                    "〔新增, 刪除, 離開, 重新整理, 關於, 下一頁〕",
                     style=Style(color="bright_magenta"),
                 )
                 try:
@@ -688,6 +688,8 @@ class PasswordBook:
                     self.refresh_page()
                 elif user_action in ["關於", "about"]:
                     self.about_page()
+                elif user_action in ["下一頁", "next"]:
+                    self.next_page()
                 else:
                     is_user_input_error = True
                 # self.logger.warning(f"未知動作！錯誤：{user_action}")
@@ -711,7 +713,7 @@ def main(logger, version):
 
 
 def launcher():
-    # TODO 待改成ppb_launcher或launch_tui統一啟動
+    # TODO:待改成ppb_launcher或launch_tui統一啟動
     import os
     import datetime
 

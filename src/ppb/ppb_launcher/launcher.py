@@ -2,11 +2,11 @@ import os
 import datetime
 import sys
 
-# import sys
-# import logging
+from typing import Literal
+
 import typer
 
-from typing import Literal
+from rich.traceback import install as tb_install
 
 from positive_tool import pt
 
@@ -15,8 +15,9 @@ if hasattr(sys, "_MEIPASS") is False:
         0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     )
 
-from ... import ppb  # ty:ignore[unresolved-import]
+from ... import ppb
 
+tb_install(show_locals=True)
 PROJECT_NAME = "positive_password_book"
 if hasattr(sys, "_MEIPASS") is True:
     # project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(sys.executable))
