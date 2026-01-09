@@ -15,16 +15,19 @@ if hasattr(sys, "_MEIPASS") is False:
         0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     )
 
-from ... import ppb
+from ...ppb.project_infos import project_infos
 
 tb_install(show_locals=True)
-PROJECT_NAME = "positive_password_book"
-if hasattr(sys, "_MEIPASS") is True:
-    # project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(sys.executable))
-    project_path = os.path.dirname(sys.executable)
-else:
-    project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(__file__))
-app_cli = typer.Typer(name=PROJECT_NAME)
+PROJECT_NAME: str = project_infos["project_name"]
+project_path: str = project_infos["project_path"]
+version = project_infos["version"]
+# PROJECT_NAME = "positive_password_book"
+# if hasattr(sys, "_MEIPASS") is True:
+#     # project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(sys.executable))
+#     project_path = os.path.dirname(sys.executable)
+# else:
+#     project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(__file__))
+app_cli = typer.Typer(name=PROJECT_NAME, pretty_exceptions_short=False)
 
 
 @app_cli.command()
@@ -51,7 +54,7 @@ def main(app_mode: Literal["tui", "gui"] = "tui"):
         from ..ppb_tui import ppb_tui
 
         try:
-            ppb_tui.main(logger, ppb.__version__)
+            ppb_tui.main(logger, version)
         except Exception as e:
             logger.critical("TUI異常關閉！", stack_info=True)
             raise e

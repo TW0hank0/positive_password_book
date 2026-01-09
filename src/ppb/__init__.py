@@ -1,2 +1,4 @@
-__version__ = "0.2.0"
+from . import project_infos
+
 __name__ = "positive_password_book"
+__version__ = project_infos.project_infos["version"]
