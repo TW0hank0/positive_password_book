@@ -4,6 +4,6 @@
 
 可填：
 
-- `same_line`
+- `same_line`：新版
 
-- `new_line`、`olg_style`
+- `new_line`、`olg_style`：*舊版*不會再更新

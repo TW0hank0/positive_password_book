@@ -5,7 +5,7 @@
     "python.testing.unittestEnabled": true,
     "python.testing.pytestEnabled": false,
     "todo-tree.highlights.defaultHighlight": {
-        "foreground": "#004e00",
+        "foreground": "#002e00",
         "background": "#ffffff2b"
     },
     "python.testing.unittestArgs": [
@@ -14,5 +14,6 @@
         ".",
         "-p",
         "*test.py"
-    ]
+    ],
+    "ruff.lint.enable": true
 }
