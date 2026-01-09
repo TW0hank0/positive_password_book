@@ -5,7 +5,7 @@ a = Analysis(
     ['launch_tui.py'],
     pathex=[],
     binaries=[],
-    datas=[('pyproject.toml', '.')],
+    datas=[('pyproject.toml', '.'), ('LICENSE', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -35,4 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='assets/icon.ico'
 )

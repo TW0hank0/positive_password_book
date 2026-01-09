@@ -23,16 +23,16 @@ from positive_tool import pt
 from positive_tool.arg import ArgType
 
 from ..ppb_backend import ppb_backend
+from ...ppb.project_infos import project_infos
 
-PROJECT_NAME = "positive_password_book"
-
-
-if hasattr(sys, "_MEIPASS") is True:
-    # project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(sys.executable))
-    project_path = os.path.dirname(sys.executable)
-else:
-    project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(__file__))
-# project_path = pt.find_project_path(PROJECT_NAME)
+project_name: str = project_infos["project_name"]
+license_file_path = project_infos["project_license_file_path"]
+project_path = project_infos["project_path"]
+# if hasattr(sys, "_MEIPASS") is True:
+#     # project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(sys.executable))
+#     project_path = os.path.dirname(sys.executable)
+# else:
+#     project_path = pt.find_project_path(project_name, os.path.dirname(__file__))
 
 
 class PPBActionPrompt(PromptBase[str]):
@@ -56,7 +56,6 @@ class PPBActionPrompt(PromptBase[str]):
             show_default=show_default,
             show_choices=show_choices,
         )
-        # self.choice: list[str] = ["新增", "刪除", "離開"]
 
     def process_response(self, value: str) -> str:
         return value
@@ -77,7 +76,6 @@ class PPBLogHandler(logging.Handler):
         self.console = console
         self.logs = []  # 存儲日誌的列表
         self.max_logs = 50  # 最大日誌數量
-
         # 設置日誌格式
         self.formatter = logging.Formatter(
             "%(asctime)s | %(levelname)s | %(message)s", datefmt="%H:%M:%S"
@@ -95,10 +93,12 @@ class PPBLogHandler(logging.Handler):
             self.handleError(record)
 
     def get_log_content(self):
-        # renderables = Renderables()
         renderables_list = []
-        # 只顯示最新的10條日誌
-        recent_logs: list = self.logs[-10:] if len(self.logs) > 10 else self.logs
+        recent_logs: list = (
+            self.logs[self.console.size.height - 7 :]
+            if len(self.logs) > (self.console.size.height - 7)
+            else self.logs
+        )
         for log in recent_logs:
             # 根據日誌等級設置顏色
             if "CRITICAL" in log:
@@ -118,7 +118,6 @@ class PPBLogHandler(logging.Handler):
         return Renderables(renderables_list)
 
     def get_logs(self) -> list:
-        """獲取所有日誌（保持原有方法兼容）"""
         return self.logs.copy()
 
 
@@ -332,7 +331,7 @@ class PasswordBook:
         self.console.print(
             Panel(
                 content,
-                title=Text(PROJECT_NAME, style=Style(color="purple", bold=True)),
+                title=Text(project_name, style=Style(color="purple", bold=True)),
                 height=self.console.size.height - 3,
             )
         )
@@ -391,7 +390,7 @@ class PasswordBook:
             Panel(
                 all_contents,
                 title=Text(
-                    PROJECT_NAME, style=Style(color="rgb(175, 0, 255)", bold=True)
+                    project_name, style=Style(color="rgb(175, 0, 255)", bold=True)
                 ),
                 height=self.console.size.height - 3,
                 border_style=Style(color="green"),
@@ -441,7 +440,7 @@ class PasswordBook:
         self.console.clear()
         self.console.print(
             Rule(
-                Text(PROJECT_NAME, style=Style(color="purple"))
+                Text(project_name, style=Style(color="purple"))
                 + Text(" ─ ", style=Style(dim=True, color="yellow", bold=True))
                 + Text("新增", style=Style(color="green")),
                 style="bright_blue",
@@ -479,7 +478,7 @@ class PasswordBook:
         self.console.clear()
         self.console.print(
             Rule(
-                Text(PROJECT_NAME, style=Style(color="purple"))
+                Text(project_name, style=Style(color="purple"))
                 + Text(" ─ ", style=Style(dim=True, color="yellow", bold=True))
                 + Text("刪除", style=Style(color="green")),
                 style="bright_blue",
@@ -598,11 +597,25 @@ class PasswordBook:
         self.console.clear()
         verion_info = Text(f"版本：{self.version}")
         rule = Rule(style=Style(color="green", dim=True))
-        contents = Renderables([verion_info, rule])
+        licnese_text = Text(
+            "本專案使用AGPL-3.0，LICENSE檔案：https://github.com/TW0hank0/positive_password_book/blob/master/LICENSE",
+            style=Style(link=license_file_path),
+        )
+        author_text = Text(
+            "專案作者：https://github.com/TW0hank0",
+            style=Style(link="https://github.com/TW0hank0"),
+        )
+        project_repo = Text(
+            "專案Github Repo：https://github.com/TW0hank0/positive_password_book",
+            style=Style(link="https://github.com/TW0hank0/positive_password_book"),
+        )
+        contents = Renderables(
+            [verion_info, rule, licnese_text, author_text, project_repo]
+        )
         panel = Panel(
             contents,
             title=Text(
-                PROJECT_NAME,
+                project_name,
                 style=Style(color="rgb(175, 0, 255)", bold=True),
             ),
             subtitle=Text("關於", style=Style(color="green")),
@@ -673,10 +686,12 @@ class PasswordBook:
                     )
                 except ValueError:
                     is_user_input_error = True
+                    self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
                 else:
                     break
             if user_action not in actions:
                 is_user_input_error = True
+                self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
             else:
                 if user_action in ["新增", "add", "a"]:
                     self.insert_appdata()
@@ -695,6 +710,7 @@ class PasswordBook:
                     self.last_page()
                 else:
                     is_user_input_error = True
+                    self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
         self.close()
 
     def __str__(self) -> str:
@@ -729,16 +745,14 @@ def launcher():
     import os
     import datetime
 
-    from ... import ppb
-
     log_dir = os.path.join(project_path, ".logs")
     if os.path.exists(log_dir) is False or os.path.isdir(log_dir) is False:
         os.mkdir(log_dir)
     time_now = datetime.datetime.now()
     time_format_str = time_now.strftime("%Y-%d-%m_%H-%M-%S")
     log_file_path = os.path.join(log_dir, f"log_{time_format_str}.log")
-    logger = pt.build_logger(log_file_path, f"{PROJECT_NAME}_logger")
-    main(logger, ppb.__version__)
+    logger = pt.build_logger(log_file_path, f"{project_name}_logger")
+    main(logger, project_infos["version"])
 
 
 if __name__ == "__main__":

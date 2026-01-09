@@ -64,5 +64,9 @@ def launch():
     app_cli()
 
 
+def launch_tui():
+    main("tui")
+
+
 if __name__ == "__main__":
     launch()

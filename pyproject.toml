@@ -28,6 +28,7 @@ build-backend = "setuptools.build_meta"
 
 [project.scripts]
 ppb = "ppb.ppb_launcher.launcher:launch"
+ppb_tui = "ppb.ppb_launcher.launcher:launch_tui"
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
