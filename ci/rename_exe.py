@@ -32,9 +32,9 @@ def main():
     root, ext = os.path.splitext(os.path.basename(orig))
     if ext == "" or ext is None:
         if "--pre" in sys.argv:
-            new_name = f"{root}_{pyver}_pre-{ver}"
+            new_name = f"{root}_{pyver}_pre-{ver}.bin"
         else:
-            new_name = f"{root}_{pyver}_{ver}"
+            new_name = f"{root}_{pyver}_{ver}.bin"
     else:
         if "--pre" in sys.argv:
             new_name = f"{root}_{pyver}_pre-{ver}{ext}"
