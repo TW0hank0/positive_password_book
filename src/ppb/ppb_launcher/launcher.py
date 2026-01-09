@@ -29,6 +29,7 @@ app_cli = typer.Typer(name=PROJECT_NAME)
 
 @app_cli.command()
 def main(app_mode: Literal["tui", "gui"] = "tui"):
+    """PPB 啟動器"""
     log_dir = os.path.join(project_path, ".logs")
     if os.path.exists(log_dir) is False or os.path.isdir(log_dir) is False:
         os.mkdir(log_dir)
@@ -52,7 +53,7 @@ def main(app_mode: Literal["tui", "gui"] = "tui"):
         try:
             ppb_tui.main(logger, ppb.__version__)
         except Exception as e:
-            print("TUI異常關閉！")
+            logger.critical("TUI異常關閉！", stack_info=True)
             raise e
 
 

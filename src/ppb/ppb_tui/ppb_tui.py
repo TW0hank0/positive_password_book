@@ -344,36 +344,9 @@ class PasswordBook:
         #
         if clear_scrren is True:
             self.console.clear()
-        # table = Table()
-        # header_style = Style(color="blue")
-        # table.add_column("應用程式", min_width=10, header_style=header_style)
-        # table.add_column("帳號", min_width=20, header_style=header_style)
-        # table.add_column("密碼", min_width=20, header_style=header_style)
-        # table.add_column("user_note", header_style=header_style, min_width=10)
-        # table.add_column("note", header_style=header_style, min_width=10)
-        #
         page_info = Text(f"第{self.page_num}頁，共{self.page_max_num}頁", style=Style())
         version_text = f"版本：{self.version}"
-        # version_info = Text(
-        #     (
-        #         " "
-        #         * (
-        #             int(
-        #                 (
-        #                     self.console.size.width
-        #                     - 4
-        #                     - (len(str(page_info)) + 5)
-        #                     - (len(version_text) + 3)
-        #                 )
-        #                 / 2
-        #             )
-        #             - int((len(version_text) + 3) / 2)
-        #         )
-        #     )
-        #     + version_text
-        # )
         version_info = Text(version_text, justify="center")
-        # self.console.print(version_info)
         info_rule = Rule(style=Style(color="green", dim=True))
         infos = Renderables([page_info])
         #
@@ -409,7 +382,6 @@ class PasswordBook:
             width=log_panel_width,
             height=self.console.size.height - 7,
             # width=int((self.console.size.width - 4) / 3),
-            # height=15,  # 設定固定高度
         )
         i = Layout(size=log_panel_width)
         i.split_row(log_panel)
@@ -435,22 +407,24 @@ class PasswordBook:
         self.logger.debug(f"資料keys： {list(self.data.keys())}")
         #
         self.pages.clear()
-        count = 1
+        count = pt.UInt(1)
         page: list = []
         for app in list(self.data.keys()):
+            if app == "trash_can":
+                continue
             self.logger.debug(f"key -> app： {app}")
             app_datas = self.data[app]
             self.logger.debug(f"value -> app_datas： {app_datas}")
             for app_data in app_datas:
                 page.append((app, app_data))
                 self.logger.debug(f"page： {page}")
-                if (count + 3) >= self.content_per_page:
+                if (count + 5 + 5) >= self.content_per_page:
                     self.pages.append(page.copy())
                     self.logger.debug(f"pages -> self.pages： {self.pages}")
                     page.clear()
-                    count = 1
+                    count = pt.UInt(1)
                 else:
-                    count += 1
+                    count += 5  # 五個value
         self.logger.debug(f"page： {page}")
         if len(page) > 0:
             self.pages.append(page.copy())
@@ -566,11 +540,11 @@ class PasswordBook:
         ArgType("app", app, [str])
         ArgType("acc", acc, [str, None])
         #
-        var_app_data: list[tuple[str, str]] = []
+        var_app_data: list[tuple[str, str, str, str]] = []
         if acc is None:
             if app != "trash_can" and app in list(self.data.keys()):
                 for i in self.data[app]:
-                    var_app_data.append((i["acc"], i["pwd"]))
+                    var_app_data.append((i["acc"], i["pwd"], i["note"], i["usernote"]))
                     break
             else:
                 msg = "找不到應用程式/帳號"
@@ -579,7 +553,17 @@ class PasswordBook:
         else:
             for i in self.data[app]:
                 if i["acc"] == acc:
-                    var_app_data.append((i["acc"], i["pwd"]))
+                    var_acc = i["acc"]
+                    pwd = i["pwd"]
+                    if hasattr(i, "note") is True:
+                        note = i["note"]
+                    else:
+                        note = ""
+                    if hasattr(i, "usernote") is True:
+                        usernote = i["usernote"]
+                    else:
+                        usernote = ""
+                    var_app_data.append((var_acc, pwd, note, usernote))
                     break
             else:
                 raise KeyError("找不到應用程式/帳號")
@@ -587,13 +571,19 @@ class PasswordBook:
         key_style = Style(color="blue")
         value_style = Style(color="yellow")
         tree = Tree(Text("應用程式：", style=key_style) + Text(app, style=value_style))
-        for acc, pwd in var_app_data:
+        for acc, pwd, note, usernote in var_app_data:
             if self.setting["acc_tree__tree_type"] == "same_line":
                 tree_acc = tree.add(
                     Text("帳號：", style=key_style) + Text(acc, style=value_style)
                 )
                 tree_acc.add(
                     Text("密碼：", style=key_style) + Text(pwd, style=value_style)
+                )
+                tree_acc.add(
+                    Text("紀錄：", style=key_style) + Text(note, style=value_style)
+                )
+                tree_acc.add(
+                    Text("筆記：", style=key_style) + Text(usernote, style=value_style)
                 )
             elif (
                 self.setting["acc_tree__tree_type"] == "new_line"
@@ -629,7 +619,14 @@ class PasswordBook:
         else:
             self.logger.warning(f"已到最後一頁！總頁數：{self.page_max_num}")
 
+    def last_page(self):
+        if (self.page_num - 1) >= 1:
+            self.page_num -= 1
+        else:
+            self.logger.warning("已是第一頁！")
+
     def main(self):
+        self.console.print("\n" * self.console.size.height)  # 防止覆蓋之前的內容
         is_user_input_error = False
         actions = [
             "新增",
@@ -648,6 +645,8 @@ class PasswordBook:
             "about",
             "下一頁",
             "next",
+            "上一頁",
+            "last",
         ]
         self.console.clear()
         while True:
@@ -661,7 +660,7 @@ class PasswordBook:
                     )
                     is_user_input_error = False
                 prompt = Text("輸入動作") + Text(
-                    "〔新增, 刪除, 離開, 重新整理, 關於, 下一頁〕",
+                    "〔新增, 刪除, 離開, 重新整理, 關於, 下一頁, 上一頁〕",
                     style=Style(color="bright_magenta"),
                 )
                 try:
@@ -690,9 +689,10 @@ class PasswordBook:
                     self.about_page()
                 elif user_action in ["下一頁", "next"]:
                     self.next_page()
+                elif user_action in ["上一頁", "last"]:
+                    self.last_page()
                 else:
                     is_user_input_error = True
-                # self.logger.warning(f"未知動作！錯誤：{user_action}")
         self.close()
 
     def __str__(self) -> str:
@@ -704,8 +704,18 @@ class PasswordBook:
     data={self.data},
     data_file_path={self.data_file_path},
     backend={self.backend}
-)
-"""
+)"""
+
+    def __repr__(self) -> str:
+        return f"""PasswordBook(
+    pages={self.pages},
+    page_num={self.page_num},
+    page_max_num={self.page_max_num},
+    content_per_page={self.content_per_page},
+    data={self.data},
+    data_file_path={self.data_file_path},
+    backend={self.backend}
+)"""
 
 
 def main(logger, version):
