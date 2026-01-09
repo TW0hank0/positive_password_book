@@ -5,7 +5,7 @@ a = Analysis(
     ['launch_tui.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('pyproject.toml', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

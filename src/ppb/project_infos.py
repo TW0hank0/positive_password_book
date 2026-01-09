@@ -12,7 +12,6 @@ _PROJECT_NAME = "positive_password_book"
 #     _PROJECT_NAME, start_find_path=os.path.dirname(__file__)
 # )
 if hasattr(sys, "_MEIPASS") is True:
-    # project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(sys.executable))
     _project_path = os.path.dirname(sys.executable)
 else:
     _project_path = pt.find_project_path(_PROJECT_NAME, os.path.dirname(__file__))

@@ -645,8 +645,10 @@ class PasswordBook:
             "about",
             "下一頁",
             "next",
+            "n",
             "上一頁",
             "last",
+            "l",
         ]
         self.console.clear()
         while True:
@@ -687,9 +689,9 @@ class PasswordBook:
                     self.refresh_page()
                 elif user_action in ["關於", "about"]:
                     self.about_page()
-                elif user_action in ["下一頁", "next"]:
+                elif user_action in ["下一頁", "next", "n"]:
                     self.next_page()
-                elif user_action in ["上一頁", "last"]:
+                elif user_action in ["上一頁", "last", "l"]:
                     self.last_page()
                 else:
                     is_user_input_error = True
