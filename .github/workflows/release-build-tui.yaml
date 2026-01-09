@@ -118,14 +118,16 @@ jobs:
         uses: actions/upload-artifact@v4
         if: runner.os == 'Windows'
         with:
-          name: positive_password_book_launch_tui.exe
+          #name: positive_password_book_launch_tui.exe
+          name: ${{ steps.rename_exe_windows.outputs.exe_path }}
           path: dist/*
 
-      - name: Upload exe artifact (Linux)
+      - name: Upload exe artifact (Linux) (cpython)
         uses: actions/upload-artifact@v4
         if: runner.os == 'Linux'
         with:
-          name: positive_password_book_launch_tui
+          #name: positive_password_book_launch_tui_${{ matrix.python }}
+          name: ${{ steps.rename_exe_linux.outputs.exe_path }}
           path: dist/*
 
   upload:
