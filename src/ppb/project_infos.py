@@ -13,10 +13,11 @@ _PROJECT_NAME = "positive_password_book"
 # )
 if hasattr(sys, "_MEIPASS") is True:
     _project_path = os.path.dirname(sys.executable)
+    _project_info_file_path = os.path.join(sys._MEIPASS, "pyproject.toml")  # type: ignore
 else:
     _project_path = pt.find_project_path(_PROJECT_NAME, os.path.dirname(__file__))
+    _project_info_file_path = os.path.join(_project_path, "pyproject.toml")
 
-_project_info_file_path = os.path.join(_project_path, "pyproject.toml")
 
 with open(_project_info_file_path, "rb") as f:
     _project_info = tomllib.load(f)
