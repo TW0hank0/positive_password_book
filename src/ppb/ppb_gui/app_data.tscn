@@ -1,0 +1,85 @@
+[gd_scene load_steps=4 format=3 uid="uid://d0iohja3xgcnv"]
+
+[ext_resource type="FontFile" uid="uid://caox6sujcwpno" path="res://fonts/Noto_Sans_TC/static/NotoSansTC-Regular.ttf" id="1_ss0nn"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_0xm2m"]
+line_spacing = 5.0
+font = ExtResource("1_ss0nn")
+font_size = 50
+font_color = Color(0.69226146, 0.5708794, 0.9985871, 1)
+outline_color = Color(0.34509528, 0.0014681804, 0.624857, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_ss0nn"]
+line_spacing = 5.0
+font = ExtResource("1_ss0nn")
+font_size = 40
+font_color = Color(0.8776157, 0.8776158, 0.8776157, 1)
+
+[node name="app_data" type="HBoxContainer"]
+custom_minimum_size = Vector2(500, 20)
+offset_right = 2160.0
+offset_bottom = 54.0
+size_flags_vertical = 0
+theme_override_constants/separation = 20
+
+[node name="item_container_acc" type="MarginContainer" parent="."]
+custom_minimum_size = Vector2(100, 10)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="item_container_acc"]
+z_index = 1
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="key" type="Label" parent="item_container_acc/HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_ss0nn")
+theme_override_font_sizes/font_size = 18
+text = "帳號："
+label_settings = SubResource("LabelSettings_0xm2m")
+
+[node name="value" type="Label" parent="item_container_acc/HBoxContainer"]
+layout_mode = 2
+text = "app_acc"
+label_settings = SubResource("LabelSettings_ss0nn")
+
+[node name="ColorRect" type="ColorRect" parent="item_container_acc"]
+custom_minimum_size = Vector2(150, 10)
+layout_mode = 2
+color = Color(0.39688957, 0.39688915, 0.3968891, 1)
+
+[node name="item_container_pwd" type="MarginContainer" parent="."]
+custom_minimum_size = Vector2(100, 10)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="item_container_pwd"]
+z_index = 1
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="key" type="Label" parent="item_container_pwd/HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_ss0nn")
+theme_override_font_sizes/font_size = 18
+text = "密碼："
+label_settings = SubResource("LabelSettings_0xm2m")
+
+[node name="value" type="Label" parent="item_container_pwd/HBoxContainer"]
+layout_mode = 2
+text = "app_pwd"
+label_settings = SubResource("LabelSettings_ss0nn")
+
+[node name="ColorRect" type="ColorRect" parent="item_container_pwd"]
+custom_minimum_size = Vector2(150, 10)
+layout_mode = 2
+color = Color(0.39688957, 0.39688915, 0.3968891, 1)
