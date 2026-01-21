@@ -1,7 +1,7 @@
 # positive_password_book
 
 上次更改：
-2026-1-9
+2026-1-21
 
 ### 使用
 
@@ -14,7 +14,12 @@ uv sync --extra tui
 uv run launch_tui.py
 ```
 
-### 目標
+### 計劃
+
+**目前計劃**
+- 完成GUI
+- 讓`ppb_launcher`可以啟動GUI
+
 **1.0.0**
 - [ ] 完成`ppb_gui`
 - [ ] 完成`trash_can`功能
