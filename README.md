@@ -6,6 +6,8 @@
 ### 使用
 
 **tui**
+下載程式碼
+接著執行：
 ```
 uv venv
 uv sync --extra tui
