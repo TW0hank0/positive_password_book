@@ -15,5 +15,11 @@
         "-p",
         "*test.py"
     ],
-    "ruff.lint.enable": true
+    "editor.defaultFormatter": "ms-python.vscode-pylance",
+    "editor.formatOnSave": true,
+    "editor.fontSize": 24,
+    "files.autoSave": "onFocusChange",
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    }
 }
