@@ -1,0 +1,17 @@
+[package]
+name = "ppb_gui_middle"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+godot = { version = "0.4" }
+#serde = { version = "1.0", features = ["derive"] }
+#serde_json = "1.0"
+# ptrs dep
+# log = { version = "0.4.28" }
+# log4rs = { version = "1.4.0", features = ["file_appender", "console_appender"] }
+# colored = { version = "3.0.0" }
+#positive_tool_rs = { git = "https://github.com/TW0hank0/positive_tool_rs" }

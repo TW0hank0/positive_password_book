@@ -1,0 +1,8 @@
+[configuration]
+
+entry_symbol = "gdextension_rust_init"
+compatibility_minimum = "4.5"
+
+[libraries]
+linux.x86_64 = "res://addons/ppb_gui_middle/ppb_gui_middle.so"
+windows.x86_64 = "res://addons/ppb_gui_middle/ppb_gui_middle.dll"

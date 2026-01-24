@@ -3,6 +3,7 @@
         "gruntfuggly.todo-tree",
         "alefragnani.bookmarks",
         "ms-python.python",
-        "charliermarsh.ruff"
+        "charliermarsh.ruff",
+        "rust-lang.rust-analyzer"
     ]
 }

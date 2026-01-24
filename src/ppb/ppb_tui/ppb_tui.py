@@ -78,7 +78,8 @@ class PPBLogHandler(logging.Handler):
         self.max_logs = 50  # 最大日誌數量
         # 設置日誌格式
         self.formatter = logging.Formatter(
-            "%(asctime)s | %(levelname)s | %(message)s", datefmt="%H:%M:%S"
+            "%(asctime)s | %(levelname)s | %(message)s",
+            datefmt="%H:%M:%S",
         )
 
     def emit(self, record):
@@ -170,7 +171,13 @@ class PPBSetting:  # TODO: 待轉成GUI、TUI通用，移到ppb_backend
 
     def setting_save(self) -> None:
         with open(self.setting_file_path, "w", encoding="utf-8") as f:
-            json.dump(self.data, f, ensure_ascii=False, sort_keys=True, indent=4)
+            json.dump(
+                self.data,
+                f,
+                ensure_ascii=False,
+                sort_keys=True,
+                indent=4,
+            )
 
     def _bytes_to_mb(self, bytes: int) -> float:
         return (bytes / 1000) / 1000
@@ -193,7 +200,7 @@ class PasswordBook:
         self.logger.addHandler(self.ppb_tui_log_handler)
         self.version = version
         self.backend = ppb_backend.PasswordBookSystem()
-        self.data: dict = {}
+        self.data: ppb_backend.data_type = {}
         self.pages: list = []
         self.data_file_path: str = os.path.abspath(
             os.path.join(project_path, "password_data.json")
@@ -234,25 +241,6 @@ class PasswordBook:
         #         tmp_color = tmp_color + f"\033[{i2}m"
         #     self.colors[i] = tmp_color
 
-    # def setting_load(self):
-    #     with open(self.setting_file_path, "r", encoding="utf-8") as f:
-    #         setting_file = json.load(f)
-    #     self.setting.update(setting_file)
-
-    # def setting_init(self):
-    #     self.setting_init_dict["acc_tree__tree_type"] = "same_line"
-    #     if os.path.exists(self.setting_file_path) is True and os.path.isfile(
-    #         self.setting_file_path
-    #     ):
-    #         self.setting_load()
-    #     else:
-    #         self.setting.update(self.setting_init_dict)
-    #         self.setting_save()
-
-    # def setting_save(self):
-    #     with open(self.setting_file_path, "w", encoding="utf-8") as f:
-    #         json.dump(self.setting, f, ensure_ascii=False, sort_keys=True)
-
     def get_backend_data(self):
         # if self.data is None:
         # self.backend.password_book_new()
@@ -292,7 +280,9 @@ class PasswordBook:
         layout.add_split(Layout(table))
         # layout.add_split(Layout(Text(f"第{self.page_num}頁，共{self.page_max_num}頁")))
         page_info = Text(
-            f"第{self.page_num}頁，共{self.page_max_num}頁", style="", end=""
+            f"第{self.page_num}頁，共{self.page_max_num}頁",
+            style="",
+            end="",
         )
         version_text = f"版本： {self.version}"
         version_info = Text(
@@ -331,7 +321,10 @@ class PasswordBook:
         self.console.print(
             Panel(
                 content,
-                title=Text(project_name, style=Style(color="purple", bold=True)),
+                title=Text(
+                    project_name,
+                    style=Style(color="purple", bold=True),
+                ),
                 height=self.console.size.height - 3,
             )
         )
@@ -343,7 +336,10 @@ class PasswordBook:
         #
         if clear_scrren is True:
             self.console.clear()
-        page_info = Text(f"第{self.page_num}頁，共{self.page_max_num}頁", style=Style())
+        page_info = Text(
+            f"第{self.page_num}頁，共{self.page_max_num}頁",
+            style=Style(),
+        )
         version_text = f"版本：{self.version}"
         version_info = Text(version_text, justify="center")
         info_rule = Rule(style=Style(color="green", dim=True))
@@ -361,7 +357,11 @@ class PasswordBook:
             content = Renderables([infos, info_rule, tree])
         else:
             content = Renderables(
-                [infos, info_rule, Text("無資料", style=Style(italic=True))]
+                [
+                    infos,
+                    info_rule,
+                    Text("無資料", style=Style(italic=True)),
+                ]
             )
         log_panel_width = int(self.console.size.width / 3)
         content_panel_width = self.console.width - log_panel_width
@@ -390,7 +390,8 @@ class PasswordBook:
             Panel(
                 all_contents,
                 title=Text(
-                    project_name, style=Style(color="rgb(175, 0, 255)", bold=True)
+                    project_name,
+                    style=Style(color="rgb(175, 0, 255)", bold=True),
                 ),
                 height=self.console.size.height - 3,
                 border_style=Style(color="green"),
@@ -441,7 +442,10 @@ class PasswordBook:
         self.console.print(
             Rule(
                 Text(project_name, style=Style(color="purple"))
-                + Text(" ─ ", style=Style(dim=True, color="yellow", bold=True))
+                + Text(
+                    " ─ ",
+                    style=Style(dim=True, color="yellow", bold=True),
+                )
                 + Text("新增", style=Style(color="green")),
                 style="bright_blue",
             )
@@ -449,37 +453,37 @@ class PasswordBook:
         app_name = Prompt.ask("應用程式")
         acc = Prompt.ask("帳號")
         pwd = Prompt.ask("密碼")
+        usernote = Prompt.ask("筆記(usernote)：")
         #
         key_style = Style(color="blue")
         value_style = Style(color="yellow")
         tree = Tree(app_name, style=key_style)
         tree.add("帳號：", style=key_style).add(acc, style=value_style)
         tree.add("密碼：", style=key_style).add(pwd, style=value_style)
-        # self.console.print(Text("應用程式：", style=key_style, end=""), end="\n")
-        # self.console.print(Text(app_name, style=value_style, end=""), end="\n")
-        # self.console.print(Text("帳號：", style=key_style))
-        # self.console.print(Text(acc, style=value_style, end=""), end="\n")
-        # self.console.print(Text("密碼：", style=key_style))
-        # self.console.print(Text(pwd, style=value_style, end=""), end="\n")
+        tree.add("筆記：", style=key_style).add(usernote, style=value_style)
         self.console.print(tree)
-        if Confirm.ask("是否正確： ", console=self.console):
-            self.backend.password_book_insert(app_name, acc, pwd)
+        if Confirm.ask("是否正確： ", console=self.console) is True:
+            self.backend.password_book_insert(app_name, acc, pwd, user_note=usernote)
             self.logger.info(
-                f"新增：應用程式「{app_name}」、帳號「{acc}」、密碼「{pwd}」。"
+                f"新增：應用程式「{app_name}」、帳號「{acc}」、密碼「{pwd}」、筆記「{usernote}」。"
             )
             self.backend_save_data()
             self.get_backend_data()
             self.backend_save_data()
         else:
-            self.console.print("已取消新增！")
-            time.sleep(1.5)
+            self.logger.info("已取消新增")
+            # self.console.print("已取消新增！")
+            # time.sleep(1.5)
 
     def delete_appdata(self):  # TODO 新增`trash_can`垃圾桶功能
         self.console.clear()
         self.console.print(
             Rule(
                 Text(project_name, style=Style(color="purple"))
-                + Text(" ─ ", style=Style(dim=True, color="yellow", bold=True))
+                + Text(
+                    " ─ ",
+                    style=Style(dim=True, color="yellow", bold=True),
+                )
                 + Text("刪除", style=Style(color="green")),
                 style="bright_blue",
             )
@@ -488,11 +492,13 @@ class PasswordBook:
         self.logger.debug(f"找到的應用程式： {apps}")
         # self.console.print(apps)
         apps_choices = Text(
-            f"〔{', '.join(apps)}〕", style=Style(color="bright_magenta")
+            f"〔{', '.join(apps)}〕",
+            style=Style(color="bright_magenta"),
         )
         while True:
             app = Prompt.ask(
-                Text("選擇要刪除帳號的應用程式") + apps_choices, console=self.console
+                Text("選擇要刪除帳號的應用程式") + apps_choices,
+                console=self.console,
             )
             if app not in apps:
                 self.console.print(
@@ -507,11 +513,13 @@ class PasswordBook:
         accs = [i["acc"] for i in self.data[app]]
         self.logger.debug(f"找到的帳號： {apps}")
         accs_choices = Text(
-            f"〔{', '.join(accs)}〕", style=Style(color="bright_magenta")
+            f"〔{', '.join(accs)}〕",
+            style=Style(color="bright_magenta"),
         )
         while True:
             acc = Prompt.ask(
-                Text("選擇要刪除的帳號") + accs_choices, console=self.console
+                Text("選擇要刪除的帳號") + accs_choices,
+                console=self.console,
             )
             if acc not in accs:
                 self.console.print(
@@ -553,7 +561,11 @@ class PasswordBook:
             for i in self.data[app]:
                 if i["acc"] == acc:
                     var_acc = i["acc"]
-                    pwd = i["pwd"]
+                    if "pwd" in i:
+                        pwd = i["pwd"]
+                    else:
+                        pwd = ""
+                        i["pwd"] = ""
                     if hasattr(i, "note") is True:
                         note = i["note"]
                     else:
@@ -610,7 +622,13 @@ class PasswordBook:
             style=Style(link="https://github.com/TW0hank0/positive_password_book"),
         )
         contents = Renderables(
-            [verion_info, rule, licnese_text, author_text, project_repo]
+            [
+                verion_info,
+                rule,
+                licnese_text,
+                author_text,
+                project_repo,
+            ]
         )
         panel = Panel(
             contents,
@@ -662,6 +680,8 @@ class PasswordBook:
             "上一頁",
             "last",
             "l",
+            "儲存",
+            "save",
         ]
         self.console.clear()
         while True:
@@ -670,12 +690,12 @@ class PasswordBook:
                 self.print_data()
                 if is_user_input_error is True:
                     self.console.print(
-                        "輸入錯誤：請從[bold]5[/bold]個動作中選擇一個！",
+                        "輸入錯誤：請選擇一個有效的動作！",
                         style=Style(blink=True, underline=True, color="red"),
                     )
                     is_user_input_error = False
                 prompt = Text("輸入動作") + Text(
-                    "〔新增, 刪除, 離開, 重新整理, 關於, 下一頁, 上一頁〕",
+                    "〔新增, 刪除, 離開, 重新整理, 關於, 下一頁, 上一頁, 儲存〕",
                     style=Style(color="bright_magenta"),
                 )
                 try:
@@ -708,6 +728,9 @@ class PasswordBook:
                     self.next_page()
                 elif user_action in ["上一頁", "last", "l"]:
                     self.last_page()
+                elif user_action in ["儲存", "save"]:
+                    self.backend_save_data()
+                    self.logger.info(f"已儲存到檔案：「{self.setting_file_path}」")
                 else:
                     is_user_input_error = True
                     self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
