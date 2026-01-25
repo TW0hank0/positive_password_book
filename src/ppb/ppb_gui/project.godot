@@ -15,7 +15,7 @@ general/updates_per_second=10
 [application]
 
 config/name="ppb_gui"
-run/main_scene="uid://6iwpxre5dyci"
+run/main_scene="uid://cdkw22drrnbvt"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(0, 0, 0, 1)
 config/icon="uid://bmtjo1gqds312"

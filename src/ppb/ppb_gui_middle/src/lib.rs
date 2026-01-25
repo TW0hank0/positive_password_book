@@ -1,15 +1,13 @@
-//! ppb_gui_middle 是GUI中間件
+//! ppb_gui_middle 是`ppb_gui`的中間件
 //use godot::classes::class_macros::private::virtuals::ProjectSettings;
 use godot::prelude::*;
 //use positive_tool_rs;
 //use serde::{Deserialize, Serialize};
 //use serde_json;
-//use std;
+use std;
 use std::path::PathBuf;
 use std::process;
 
-// 定義與 Python 約定的 JSON 檔案結構
-//#[derive(Serialize, Deserialize, Clone)]
 #[derive(Clone)]
 struct ReqType {
     actions: Vec<String>,
@@ -31,6 +29,11 @@ impl ReqType {
         );
     }
 }
+
+struct PpbGuiMiddle;
+
+#[gdextension]
+unsafe impl ExtensionLibrary for PpbGuiMiddle {}
 
 /* #[derive(Serialize, Deserialize, Debug)]
 struct RespType {
@@ -73,9 +76,12 @@ impl GDMiddleApi {
         actions: godot::builtin::Array<GString>,
         project_user_dir_path: GString,
     ) -> GString {
+        godot_print!("檔案路徑：{}", project_user_dir_path);
         let backend_dir_path = PathBuf::from(project_user_dir_path.to_string())
             .join("addons")
-            .join("ppb_backend");
+            .join("ppb_backend")
+            .canonicalize()
+            .unwrap();
         let mut arg_actions: Vec<String> = Vec::new();
         for action in actions.iter_shared() {
             arg_actions.push(action.to_string());
@@ -83,15 +89,22 @@ impl GDMiddleApi {
         let server_output = text_io(arg_actions, backend_dir_path);
         return server_output.to_godot();
     }
+
+    #[func]
+    fn gd_write_bin_file(file_content: godot::builtin::PackedByteArray, file_path: GString) {
+        let file_path_pathbuf = PathBuf::from(file_path.to_string());
+        if !file_path_pathbuf.exists() || !file_path_pathbuf.is_absolute() {
+            godot_error!("檔案不存在：{}", file_path_pathbuf.display());
+        }
+        if write_bin_file(file_content.to_string(), file_path_pathbuf).is_err() {
+            godot_error!("檔案寫入錯誤！");
+        }
+    }
 }
 
 fn text_io(arg_actions: Vec<String>, backend_dir_path: PathBuf) -> String {
     let actions = arg_actions;
-    /* for arg in arg_actions. {
-        actions.push(arg.into());
-    } */
-    /* let project_root_path: PathBuf =
-    ptrs::pt::find_project_root_path("positive_password_book").unwrap(); */
+    //let project_root_path: PathBuf = ptrs::pt::find_project_root_path("positive_password_book").unwrap();
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -111,6 +124,10 @@ fn text_io(arg_actions: Vec<String>, backend_dir_path: PathBuf) -> String {
     {
         backend_file_path = PathBuf::from(backend_dir_path.clone()).join("ppb_backend_linux.bin");
     }
+    if !backend_file_path.exists() || !backend_file_path.is_absolute() {
+        eprintln!("檔案不存在！路徑：{}", backend_file_path.display())
+    }
+    godot_print!("檔案路徑：{}", backend_file_path.display());
     let process_result = process::Command::new(backend_file_path)
         .args(["server", "--server-text-arg", &req_data_str])
         .output()
@@ -120,6 +137,13 @@ fn text_io(arg_actions: Vec<String>, backend_dir_path: PathBuf) -> String {
         .to_owned()
         .to_string();
     return server_output;
+}
+
+fn write_bin_file(file_content: String, file_path: PathBuf) -> std::io::Result<()> {
+    if !file_path.exists() {
+        eprintln!("檔案不存在！")
+    }
+    std::fs::write(file_path, file_content)
 }
 
 /* #[godot_api]

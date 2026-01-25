@@ -22,5 +22,6 @@
     "[jsonc]": {
         "editor.defaultFormatter": "vscode.json-language-features"
     },
-    "python.analysis.typeCheckingMode": "off"
+    "basedpyright.analysis.autoFormatStrings": true,
+    "basedpyright.analysis.typeCheckingMode": "standard"
 }
