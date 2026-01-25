@@ -1,12 +1,14 @@
 # positive_password_book
 
+**中文** | [English](READMEs/README_en.md)
+
 最後更改：
 
 2026-1-25
 
 ## 使用
 
-### tui
+### TUI
 
 下載程式碼
 ```
