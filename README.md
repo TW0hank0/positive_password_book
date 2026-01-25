@@ -1,6 +1,6 @@
 # positive_password_book
 
-上次更改：
+最後更改：
 
 2026-1-25
 
