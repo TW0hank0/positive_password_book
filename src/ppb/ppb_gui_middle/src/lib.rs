@@ -8,6 +8,8 @@ use std;
 use std::path::PathBuf;
 use std::process;
 
+use dirs;
+
 #[derive(Clone)]
 struct ReqType {
     actions: Vec<String>,
@@ -72,12 +74,19 @@ impl INode for GDMiddleApi {
 #[godot_api]
 impl GDMiddleApi {
     #[func]
-    fn gd_text_io(
-        actions: godot::builtin::Array<GString>,
-        project_user_dir_path: GString,
-    ) -> GString {
-        godot_print!("檔案路徑：{}", project_user_dir_path);
-        let backend_dir_path = PathBuf::from(project_user_dir_path.to_string())
+    fn gd_text_io(actions: godot::builtin::Array<GString>) -> GString {
+        let home_dir = dirs::home_dir().unwrap();
+        let project_user_dir_path: PathBuf;
+        #[cfg(target_os = "windows")]
+        {
+            project_user_dir_path = home_dir.clone().join("AppData").join("Local").join("ppb")
+        }
+        #[cfg(target_family = "unix")]
+        {
+            project_user_dir_path = home_dir.clone().join(".local").join("ppb")
+        }
+        let backend_dir_path = project_user_dir_path
+            .clone()
             .join("addons")
             .join("ppb_backend")
             .canonicalize()
@@ -88,17 +97,6 @@ impl GDMiddleApi {
         }
         let server_output = text_io(arg_actions, backend_dir_path);
         return server_output.to_godot();
-    }
-
-    #[func]
-    fn gd_write_bin_file(file_content: godot::builtin::PackedByteArray, file_path: GString) {
-        let file_path_pathbuf = PathBuf::from(file_path.to_string());
-        if !file_path_pathbuf.exists() || !file_path_pathbuf.is_absolute() {
-            godot_error!("檔案不存在：{}", file_path_pathbuf.display());
-        }
-        if write_bin_file(file_content.to_string(), file_path_pathbuf).is_err() {
-            godot_error!("檔案寫入錯誤！");
-        }
     }
 }
 
@@ -137,13 +135,6 @@ fn text_io(arg_actions: Vec<String>, backend_dir_path: PathBuf) -> String {
         .to_owned()
         .to_string();
     return server_output;
-}
-
-fn write_bin_file(file_content: String, file_path: PathBuf) -> std::io::Result<()> {
-    if !file_path.exists() {
-        eprintln!("檔案不存在！")
-    }
-    std::fs::write(file_path, file_content)
 }
 
 /* #[godot_api]
