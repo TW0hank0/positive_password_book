@@ -11,7 +11,7 @@ _PROJECT_NAME = "positive_password_book"
 if hasattr(sys, "_MEIPASS") is True:
     _project_path = os.path.dirname(sys.executable)
     _project_info_file_path = os.path.join(
-        sys._MEIPASS,  # type: ignore
+        sys._MEIPASS,  # pyright: ignore[reportAttributeAccessIssue]
         "pyproject.toml",
     )
     _project_license_file_path = os.path.join(sys._MEIPASS, "LICENSE")  # type: ignore

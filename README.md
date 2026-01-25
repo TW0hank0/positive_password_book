@@ -1,20 +1,27 @@
 # positive_password_book
 
 上次更改：
+
 2026-1-21
 
-### 使用
+## 使用
 
-**tui**
+### tui
+
 下載程式碼
-接著執行：
+```
+git clone https://github.com/TW0hank0/positive_password_book.git
+```
+
+執行：
+
 ```
 uv venv
 uv sync --extra tui
 uv run launch_tui.py
 ```
 
-### 計劃
+## 計劃
 
 **目前計劃**
 - 完成GUI
@@ -28,5 +35,5 @@ uv run launch_tui.py
 - [ ] 設定框架移至`ppb_backend`
 - [ ] 修改已創建的帳號
 
-### 協議
+## 協議
 請遵守本專案使用的AGPL-3.0協議

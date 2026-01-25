@@ -21,5 +21,6 @@
     "files.autoSave": "onFocusChange",
     "[jsonc]": {
         "editor.defaultFormatter": "vscode.json-language-features"
-    }
+    },
+    "python.analysis.typeCheckingMode": "off"
 }
