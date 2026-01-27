@@ -26,5 +26,7 @@
     "basedpyright.analysis.typeCheckingMode": "standard",
     "editor.fontFamily": "Consola, 'Courier New', monospace",
     "python.venvPath": ".venv",
-    "basedpyright.analysis.autoSearchPaths": true
+    "basedpyright.analysis.autoSearchPaths": true,
+    "editor.cursorStyle": "line",
+    "editor.overtypeCursorStyle": "block"
 }
