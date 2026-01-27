@@ -270,33 +270,49 @@ class PasswordBookGui(QMainWindow):
                     acc = app_data.get("acc", "")
                     pwd = app_data.get("pwd", "")
                     layout_h = QHBoxLayout()
-                    app_name_label = QLabel(
-                        f"<u>應用程式：</u>{app_name}",
+                    layout_app_name = QHBoxLayout()
+                    app_name_key = QLabel("<u>應用程式：</u>")
+                    app_name_value = QLabel(
+                        app_name,
                     )
-                    app_name_label.setTextInteractionFlags(
+                    layout_app_name.addWidget(app_name_key)
+                    layout_app_name.addWidget(app_name_value)
+                    app_name_value.setTextInteractionFlags(
                         Qt.TextInteractionFlag.TextSelectableByMouse
                         | Qt.TextInteractionFlag.TextSelectableByKeyboard
                     )
-                    acc_label = QLabel(
-                        f"<u>帳號：</u>{acc}",
+                    layout_acc = QHBoxLayout()
+                    acc_label_key = QLabel(
+                        "<u>帳號：</u>",
                     )
-                    acc_label.setTextInteractionFlags(
+                    acc_label_value = QLabel(
+                        acc,
+                    )
+                    acc_label_value.setTextInteractionFlags(
                         Qt.TextInteractionFlag.TextSelectableByMouse
                         | Qt.TextInteractionFlag.TextSelectableByKeyboard
                     )
-                    pwd_label = QLabel(
-                        f"<u>密碼：</u>{pwd}",
+                    layout_acc.addWidget(acc_label_key)
+                    layout_acc.addWidget(acc_label_value)
+                    layout_pwd = QHBoxLayout()
+                    pwd_label_key = QLabel(
+                        "<u>密碼：</u>",
                     )
-                    pwd_label.setTextInteractionFlags(
+                    pwd_label_value = QLabel(
+                        pwd,
+                    )
+                    pwd_label_value.setTextInteractionFlags(
                         Qt.TextInteractionFlag.TextSelectableByMouse
                         | Qt.TextInteractionFlag.TextSelectableByKeyboard
                     )
-                    layout_h.addWidget(app_name_label)
-                    layout_h.addWidget(acc_label)
-                    layout_h.addWidget(pwd_label)
+                    layout_pwd.addWidget(pwd_label_key)
+                    layout_pwd.addWidget(pwd_label_value)
+                    layout_h.addLayout(layout_app_name)
+                    layout_h.addLayout(layout_acc)
+                    layout_h.addLayout(layout_pwd)
                     self.app_data_layout.addLayout(layout_h)
                     #
-                    self.data_objs.append(app_name_label)
+                    self.data_objs.append(app_name_value)
                     self.data_objs.append(acc)
                     self.data_objs.append(pwd)
                     self.data_objs.append(layout_h)
