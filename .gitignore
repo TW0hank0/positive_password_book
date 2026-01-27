@@ -21,7 +21,7 @@ target/
 .pytest_cache/
 
 # log
-.logs/
+.*logs/
 
 password_data.json
 setting_tui.json

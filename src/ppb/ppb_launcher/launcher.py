@@ -1,11 +1,11 @@
 import os
 import datetime
 import sys
-import subprocess
-import platform
-import webbrowser
+# import subprocess
+# import platform
+# import webbrowser
 
-from traceback import print_exception
+# from traceback import print_exception
 from typing import Literal
 
 import typer
@@ -42,7 +42,7 @@ app_cli = typer.Typer(
 @app_cli.command()
 def main(app_mode: Literal["tui", "gui"] = "tui"):
     """PPB 啟動器"""
-    log_dir = os.path.join(project_path, ".logs")
+    log_dir = os.path.join(project_path, ".ppb_logs")
     if (
         os.path.exists(log_dir) is False
         or os.path.isdir(log_dir) is False
@@ -59,42 +59,13 @@ def main(app_mode: Literal["tui", "gui"] = "tui"):
     if logger is None:
         raise RuntimeError("日志系統初始化失敗！")
     if app_mode == "gui":
-        gui_exec_dir_path = os.path.join(
-            project_infos["project_path"],
-            "src",
-            "ppb",
-            "ppb_gui",
-            "exports",
-        )
-        exec_file_type: Literal["exec", "web"]
-        match platform.platform():
-            case "Windows":
-                logger.info("在Windows啟動GUI。")
-                gui_exec_file_path = os.path.join(
-                    gui_exec_dir_path, "win", "ppb_gui_win_x86-64.exe"
-                )
-                exec_file_type = "exec"
-            case _:
-                gui_exec_file_path = os.path.join(
-                    gui_exec_dir_path, "web", "ppb_gui_web"
-                )
-                exec_file_type = "web"
-        logger.info("啟動GUI。")
-        if exec_file_type == "exec":
-            try:
-                subprocess.run(gui_exec_file_path)
-            except Exception as e:
-                logger.critical(f"GUI異常關閉！錯誤訊息：「{e}」")
-                print_exception(e)
-        elif exec_file_type == "web":
-            result = webbrowser.open(gui_exec_file_path)
-            if result is not True:
-                logger.critical("WEB GUI開啟失敗！")
-        else:
-            logger.critical(
-                f"未知錯誤：exec_file_type=「{exec_file_type}」、gui_exec_file_path=「{gui_exec_file_path}」"
-            )
-            sys.exit(1)
+        logger.info("啟動GUI...")
+        from ..ppb_gui import ppb_gui
+
+        try:
+            ppb_gui.main(logger)
+        except Exception as e:
+            logger.critical(f"GUI異常關閉！錯誤訊息：「{e}」")
     elif app_mode == "tui":
         logger.info("啟動TUI")
         from ..ppb_tui import ppb_tui
@@ -112,6 +83,10 @@ def launch():
 
 def launch_tui():
     main("tui")
+
+
+def launch_gui():
+    main("gui")
 
 
 if __name__ == "__main__":
