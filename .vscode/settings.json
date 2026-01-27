@@ -24,5 +24,7 @@
     },
     "basedpyright.analysis.autoFormatStrings": true,
     "basedpyright.analysis.typeCheckingMode": "standard",
-    "editor.fontFamily": "'Droid Sans Mono', monospace"
+    "editor.fontFamily": "Consola, 'Courier New', monospace",
+    "python.venvPath": ".venv",
+    "basedpyright.analysis.autoSearchPaths": true
 }

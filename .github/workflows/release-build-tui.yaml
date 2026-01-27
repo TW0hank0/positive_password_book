@@ -33,7 +33,7 @@ jobs:
         run: uv sync --extra tui --extra build
 
       - name: Build executable with pyinstaller
-        run: uv run pyinstaller launch_tui.spec
+        run: uv run pyinstaller ppb_tui.spec
 
       - name: Prepare CI Venv
         run: |
