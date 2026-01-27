@@ -1,6 +1,7 @@
 import sys
 import os
 import datetime
+import threading
 
 from typing_extensions import Self
 
@@ -143,21 +144,24 @@ class CustomTitleBar(QWidget):
             event.accept()
 
     def minimize_window(self):
-        if self.parent:
-            self.parent.showMinimized()
+        parent = self.parent()
+        if parent:
+            parent.showMinimized()
 
     def toggle_maximize(self):
-        if self.parent:
-            if self.parent.isMaximized():
-                self.parent.showNormal()
+        parent = self.parent()
+        if parent:
+            if parent.isMaximized():
+                parent.showNormal()
                 self.maximize_button.setText("□")
             else:
-                self.parent.showMaximized()
+                parent.showMaximized()
                 self.maximize_button.setText("❐")
 
     def close_window(self):
-        if self.parent:
-            self.parent.close()
+        parent = self.parent()
+        if parent:
+            parent.close()
 
 
 class PasswordBookGui(QMainWindow):
@@ -260,7 +264,11 @@ def main(logger):
     #
     window = PasswordBookGui(app, logger)
     window.show()
-    sys.exit(app.exec())
+
+    def start():
+        sys.exit(app.exec())
+
+    thread = threading.Thread(target=start)
 
 
 if __name__ == "__main__":
