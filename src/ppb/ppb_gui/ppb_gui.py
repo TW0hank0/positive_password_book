@@ -311,7 +311,7 @@ class PasswordBookGui(QMainWindow):
                     layout_h.addLayout(layout_acc)
                     layout_h.addLayout(layout_pwd)
                     self.app_data_layout.addLayout(layout_h)
-                    #
+                    # TODO:下方
                     self.data_objs.append(app_name_value)
                     self.data_objs.append(acc)
                     self.data_objs.append(pwd)
