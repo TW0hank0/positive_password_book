@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['launch_tui.py'],
+    ['launch_gui.py'],
     pathex=[],
     binaries=[],
     datas=[('pyproject.toml', '.'), ('LICENSE', '.'), ('icon.png', '.')],
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='positive_password_book_tui',
+    name='positive_password_book_gui',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
