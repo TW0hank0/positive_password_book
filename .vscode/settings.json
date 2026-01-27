@@ -15,7 +15,7 @@
         "-p",
         "*test.py"
     ],
-    "editor.defaultFormatter": "ms-python.vscode-pylance",
+    "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnSave": true,
     "editor.fontSize": 24,
     "files.autoSave": "onFocusChange",
@@ -23,5 +23,6 @@
         "editor.defaultFormatter": "vscode.json-language-features"
     },
     "basedpyright.analysis.autoFormatStrings": true,
-    "basedpyright.analysis.typeCheckingMode": "standard"
+    "basedpyright.analysis.typeCheckingMode": "standard",
+    "editor.fontFamily": "'Droid Sans Mono', monospace"
 }
