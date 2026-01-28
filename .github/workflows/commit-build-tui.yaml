@@ -285,13 +285,9 @@ jobs:
             --repo="${{ github.repository }}"
 
       - name: Upload all files in artifacts/
+        id: upload_artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for asset in ./artifacts/**; do
-            echo "checking file/dir $asset"
-            if [ -f "$asset" ]; then
-              echo "Uploading: $asset"
-              gh release upload "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" "$asset" \
-                --repo="${{ github.repository }}"
-          done
+          cd ci
+          uv run upload_arttifacts.py ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui ${{ github.repository }}
