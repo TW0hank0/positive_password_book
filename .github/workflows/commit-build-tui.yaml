@@ -251,17 +251,44 @@ jobs:
           echo '--------'
           ls artifacts
 
-      - name: Create prerelease and upload wheel
-        uses: ncipollo/release-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui
-          name: ci-positive_password_book_tui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ github.sha }}+${{ steps.get_datetime.outputs.datetime }}
-          prerelease: true
-          artifacts: artifacts/*
-          body: |
-            **這是使用CI製作的TUI測試版，使用github action製作**
-            - 版本： ${{ steps.get_version.outputs.version }}
-            - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}
-            > UTC時間：臺北時間-8
-            - github_sha： ${{ github.sha }}
+      # - name: Create prerelease and upload wheel
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui
+      #     name: ci-positive_password_book_tui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ github.sha }}+${{ steps.get_datetime.outputs.datetime }}
+      #     prerelease: true
+      #     artifacts: artifacts/*
+      #     body: |
+      #       **這是使用CI製作的TUI測試版，使用github action製作**
+      #       - 版本： ${{ steps.get_version.outputs.version }}
+      #       - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}
+      #       > UTC時間：臺北時間-8
+      #       - github_sha： ${{ github.sha }}
+
+      - name: Create Prerelease via GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" \
+            --title "ci-positive_password_book_tui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ github.sha }}+${{ steps.get_datetime.outputs.datetime }}" \
+            --notes "**這是使用CI製作的TUI測試版，使用github action製作**\
+            - 版本： ${{ steps.get_version.outputs.version }}\
+            - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}\
+            > UTC時間：臺北時間-8\
+            - github_sha： ${{ github.sha }}" \
+            --prerelease \
+            --repo="${{ github.repository }}"
+
+      - name: Upload all files in artifacts/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd ./artifacts
+          for asset in *; do
+            if [ -f "$asset" ]; then
+              gh release upload "${{ ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui }}" "$asset" \
+                --repo="${{ github.repository }}"
+            fi
+          done
+
