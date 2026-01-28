@@ -211,6 +211,8 @@ jobs:
   upload:
     needs: build_exec
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -272,10 +274,10 @@ jobs:
         run: |
           gh release create "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" \
             --title "ci-positive_password_book_tui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ github.sha }}+${{ steps.get_datetime.outputs.datetime }}" \
-            --notes "**這是使用CI製作的TUI測試版，使用github action製作**\n
-            - 版本： ${{ steps.get_version.outputs.version }}\n
-            - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}\n
-            > UTC時間：臺北時間-8 \n
+            --notes "**這是使用CI製作的TUI測試版，使用github action製作**
+            - 版本： ${{ steps.get_version.outputs.version }}
+            - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}
+            > UTC時間：臺北時間-8 
             - github_sha： ${{ github.sha }}" \
             --prerelease \
             --repo="${{ github.repository }}"
@@ -285,11 +287,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd ./artifacts
+          shopt -s nullglob  # 避免空目錄時迴圈錯誤
           for asset in *; do
             if [ -f "$asset" ]; then
+            echo "Uploading: $asset"
               gh release upload "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" "$asset" \
                 --repo="${{ github.repository }}"
             fi
           done
           cd ..
-
