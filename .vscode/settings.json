@@ -24,7 +24,7 @@
     },
     "basedpyright.analysis.autoFormatStrings": true,
     "basedpyright.analysis.typeCheckingMode": "standard",
-    "editor.fontFamily": "Consola, 'Courier New', monospace",
+    "editor.fontFamily": "Consolas, 'Courier New', monospace",
     "python.venvPath": ".venv",
     "basedpyright.analysis.autoSearchPaths": true,
     "editor.cursorStyle": "line",
