@@ -316,6 +316,9 @@ class PasswordBookGui(QMainWindow):
                     self.data_objs.append(acc)
                     self.data_objs.append(pwd)
                     self.data_objs.append(layout_h)
+                    self.data_objs.append(layout_app_name)
+                    self.data_objs.append(layout_acc)
+                    self.data_objs.append(layout_pwd)
 
     def changeEvent(self, event: QEvent):
         if event.type() == QEvent.Type.WindowStateChange and self.title_bar is not None:
