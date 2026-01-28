@@ -5,6 +5,7 @@
 **目前計劃**
 - 完成GUI
 - 讓`ppb_launcher`可以啟動GUI
+- CI檔名要寫系統
 
 **1.0.0**
 - [ ] 完成`ppb_gui`
