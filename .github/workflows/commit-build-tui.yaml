@@ -34,20 +34,6 @@ jobs:
       - name: Build executable with pyinstaller
         run: uv run pyinstaller ppb_tui.spec
 
-      - name: Upload exe artifact (Windows)
-        uses: actions/upload-artifact@v4
-        if: runner.os == 'Windows'
-        with:
-          name: positive_password_book_launch_tui_${{ matrix.python }}.exe
-          path: dist/*
-
-      - name: Upload exe artifact (Linux)
-        uses: actions/upload-artifact@v4
-        if: runner.os == 'Linux'
-        with:
-          name: positive_password_book_launch_tui_${{ matrix.python }}
-          path: dist/*
-
       - name: Prepare CI Venv (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -156,54 +142,108 @@ jobs:
           echo "exe_path=$exe_path" >> $env:GITHUB_OUTPUT
           cd ..
 
-      - name: Get datetime (Linux)
-        id: get_datetime_linux
+      - name: Upload exe artifact (Windows)
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: positive_password_book_launch_tui_${{ matrix.python }}.exe
+          path: dist/*
+
+      - name: Upload exe artifact (Linux)
+        uses: actions/upload-artifact@v4
         if: runner.os == 'Linux'
+        with:
+          name: positive_password_book_launch_tui_${{ matrix.python }}
+          path: dist/*
+
+      # - name: Get datetime (Linux)
+      #   id: get_datetime_linux
+      #   if: runner.os == 'Linux'
+      #   run: |
+      #     cd ci
+      #     datetime=$(uv run get_datetime.py)
+      #     echo "datetime=$datetime" >> $GITHUB_OUTPUT
+      #     cd ..
+
+      # - name: Get datetime (Windows)
+      #   id: get_datetime_windows
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     cd ci
+      #     $datetime = uv run --with tzdata get_datetime.py
+      #     echo "datetime=$datetime" >> $env:GITHUB_OUTPUT
+      #     cd ..
+
+      # - name: Create prerelease and upload wheel (Linux)
+      #   uses: ncipollo/release-action@v1
+      #   if: runner.os == 'Linux'
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: v${{ steps.get_version_linux.outputs.version }}-tui-pre-${{ steps.get_sha_linux.outputs.short_sha }}-${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}__${{ matrix.python }}
+      #     name: positive_password_book_tui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_sha_linux.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}
+      #     prerelease: true
+      #     artifacts: ${{ steps.rename_exe_linux.outputs.exe_path }}
+      #     body: |
+      #       **這是TUI測試版，使用github action製作**
+      #       - 系統： ${{ matrix.os }}
+      #       - 版本： ${{ steps.get_version_linux.outputs.version }}
+      #       - 臺北時間： ${{ steps.get_datetime_linux.outputs.datetime }}
+      #       > UTC時間：臺北時間-8
+      #       - github_sha（完整）： ${{ github.sha }}
+
+      # - name: Create prerelease and upload wheel (Windows)
+      #   uses: ncipollo/release-action@v1
+      #   if: runner.os == 'Windows'
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: v${{ steps.get_version_windows.outputs.version }}-tui-pre-${{ steps.get_sha_windows.outputs.short_sha }}-${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}__${{ matrix.python }}
+      #     name: positive_password_book_tui_pre-release+${{ steps.get_version_windows.outputs.version }}+${{ steps.get_sha_windows.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}
+      #     prerelease: true
+      #     artifacts: ${{ steps.rename_exe_windows.outputs.exe_path }}
+      #     body: |
+      #       **這是TUI測試版，使用github action製作**
+      #       - 系統： ${{ matrix.os }}
+      #       - 版本： ${{ steps.get_version_windows.outputs.version }}
+      #       - 臺北時間： ${{ steps.get_datetime_windows.outputs.datetime }}
+      #       > UTC時間：臺北時間-8
+      #       - github_sha（完整）： ${{ github.sha }}
+
+  upload:
+    needs: build_exec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+    
+      - name: Get datetime
+        id: get_datetime
         run: |
           cd ci
           datetime=$(uv run get_datetime.py)
           echo "datetime=$datetime" >> $GITHUB_OUTPUT
           cd ..
 
-      - name: Get datetime (Windows)
-        id: get_datetime_windows
-        if: runner.os == 'Windows'
+      - name: Get package get_version
+        id: get_version
         run: |
           cd ci
-          $datetime = uv run --with tzdata get_datetime.py
-          echo "datetime=$datetime" >> $env:GITHUB_OUTPUT
+          version=$(uv run get_version.py)
           cd ..
+          echo "version=$version" >> $GITHUB_OUTPUT
 
-      - name: Create prerelease and upload wheel (Linux)
+      - name: Create prerelease and upload wheel
         uses: ncipollo/release-action@v1
-        if: runner.os == 'Linux'
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ steps.get_version_linux.outputs.version }}-tui-pre-${{ steps.get_sha_linux.outputs.short_sha }}-${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}__${{ matrix.python }}
-          name: positive_password_book_tui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_sha_linux.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}
+          tag: v${{ steps.get_version.outputs.version }}-tui-pre-${{ github.sha }}-${{ steps.get_datetime_.outputs.datetime }}
+          name: positive_password_book_tui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ github.sha }}+${{ steps.get_datetime.outputs.datetime }}
           prerelease: true
-          artifacts: ${{ steps.rename_exe_linux.outputs.exe_path }}
+          artifacts: artifacts
           body: |
             **這是TUI測試版，使用github action製作**
-            - 系統： ${{ matrix.os }}
-            - 版本： ${{ steps.get_version_linux.outputs.version }}
-            - 臺北時間： ${{ steps.get_datetime_linux.outputs.datetime }}
+            - 版本： ${{ steps.get_version.outputs.version }}
+            - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}
             > UTC時間：臺北時間-8
-            - github_sha（完整）： ${{ github.sha }}
-
-      - name: Create prerelease and upload wheel (Windows)
-        uses: ncipollo/release-action@v1
-        if: runner.os == 'Windows'
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ steps.get_version_windows.outputs.version }}-tui-pre-${{ steps.get_sha_windows.outputs.short_sha }}-${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}__${{ matrix.python }}
-          name: positive_password_book_tui_pre-release+${{ steps.get_version_windows.outputs.version }}+${{ steps.get_sha_windows.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}
-          prerelease: true
-          artifacts: ${{ steps.rename_exe_windows.outputs.exe_path }}
-          body: |
-            **這是TUI測試版，使用github action製作**
-            - 系統： ${{ matrix.os }}
-            - 版本： ${{ steps.get_version_windows.outputs.version }}
-            - 臺北時間： ${{ steps.get_datetime_windows.outputs.datetime }}
-            > UTC時間：臺北時間-8
-            - github_sha（完整）： ${{ github.sha }}
+            - github_sha： ${{ github.sha }}
