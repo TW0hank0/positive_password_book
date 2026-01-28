@@ -249,12 +249,12 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ steps.get_version.outputs.version }}-tui-pre-${{ github.sha }}-${{ steps.get_datetime_.outputs.datetime }}
-          name: positive_password_book_tui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ github.sha }}+${{ steps.get_datetime.outputs.datetime }}
+          tag: ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui
+          name: ci-positive_password_book_tui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ github.sha }}+${{ steps.get_datetime.outputs.datetime }}
           prerelease: true
           artifacts: artifacts
           body: |
-            **這是TUI測試版，使用github action製作**
+            **這是使用CI製作的TUI測試版，使用github action製作**
             - 版本： ${{ steps.get_version.outputs.version }}
             - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}
             > UTC時間：臺北時間-8
