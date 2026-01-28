@@ -127,7 +127,7 @@ jobs:
         if: runner.os == 'Linux'
         with:
           #name: positive_password_book_launch_tui_${{ matrix.python }}
-          name: ${{ steps.rename_exe_linux.outputs.exe_path }}
+          #name: ${{ steps.rename_exe_linux.outputs.exe_path }}
           path: dist/*
 
   upload:

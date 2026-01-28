@@ -118,7 +118,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: runner.os == 'Windows'
         with:
-          name: ${{ steps.rename_exe_windows.outputs.exe_path }}
+          name: #${{ steps.rename_exe_windows.outputs.exe_path }}
           path: dist/*
 
       - name: Upload exe artifact (Linux) (cpython)
