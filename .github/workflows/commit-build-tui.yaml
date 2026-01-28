@@ -245,6 +245,12 @@ jobs:
           cd ..
           echo "version=$version" >> $GITHUB_OUTPUT
 
+      - name: List Dir (for debug)
+        run: |
+          ls .
+          echo '--------'
+          ls artifacts
+
       - name: Create prerelease and upload wheel
         uses: ncipollo/release-action@v1
         with:

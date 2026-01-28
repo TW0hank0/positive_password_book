@@ -14,3 +14,6 @@
 - [ ] 設定框架移至`ppb_backend`
 - [ ] 修改已創建的帳號
 - [ ] CI支援GUI/TUI/FUll(GUI+TUI)三個版本
+
+**未來計畫**
+- [ ] 分離`ppb_backend`內的`ppb_cli`
