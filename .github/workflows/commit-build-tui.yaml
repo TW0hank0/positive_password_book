@@ -286,8 +286,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          shopt -s nullglob  # 避免空目錄時迴圈錯誤
-          for asset in ./artifacts/*; do
+          for asset in ./artifacts/**; do
             if [ -f "$asset" ]; then
             echo "Uploading: $asset"
               gh release upload "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" "$asset" \
