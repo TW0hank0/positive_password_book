@@ -288,8 +288,8 @@ jobs:
         run: |
           for asset in ./artifacts/**; do
             if [ -f "$asset" ]; then
-            echo "Uploading: $asset"
-            gh release upload "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" "$asset" \
-              --repo="${{ github.repository }}"
+              echo "Uploading: $asset"
+              gh release upload "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" "$asset" \
+                --repo="${{ github.repository }}"
             fi
           done
