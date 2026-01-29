@@ -19,7 +19,7 @@ for dir in dirs:
                 f"--repo={sys.argv[2]}",
             ],
             check=True,
-            timeout=20.0,
+            timeout=40.0,
         )
     else:
         print("dir files:{}".format(os.listdir(os.path.join(path, dir))))
