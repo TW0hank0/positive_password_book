@@ -290,4 +290,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd ci
-          uv run upload_artifacts.py ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui ${{ github.repository }}
+          uv run upload_artifacts.py "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" ${{ github.repository }}
