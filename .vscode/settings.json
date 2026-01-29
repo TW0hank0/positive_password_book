@@ -22,7 +22,7 @@
     "[jsonc]": {
         "editor.defaultFormatter": "vscode.json-language-features"
     },
-    "basedpyright.analysis.autoFormatStrings": true,
+    "basedpyright.analysis.autoFormatStrings": false,
     "basedpyright.analysis.typeCheckingMode": "standard",
     "editor.fontFamily": "Consolas, 'Courier New', monospace",
     "python.venvPath": ".venv",

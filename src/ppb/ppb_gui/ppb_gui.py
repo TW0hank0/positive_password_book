@@ -6,6 +6,7 @@ from typing_extensions import Self
 
 from PySide6.QtWidgets import (
     QLabel,
+    QStyle,
     QVBoxLayout,
     QHBoxLayout,
     QPushButton,
@@ -278,7 +279,12 @@ class PasswordBookGui(QMainWindow):
         new_layout.setAlignment(
             Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
         )
-        new_layout.setSpacing(15)  # 增加項目間距提升可讀性
+        new_layout.setSpacing(20)
+        group_style = """
+            QGroupBox {
+                background-color: rgb(64, 64, 64);
+            }
+        """
         # 依資料結構建立UI元件
         for app_name in self.data:
             if app_name == "trash_can":
@@ -286,12 +292,11 @@ class PasswordBookGui(QMainWindow):
             for app_data in self.data[app_name]:
                 acc: str = app_data.get("acc", "")
                 pwd: str = app_data.get("pwd", "")
-
                 # 水平容器：單一帳密組合
                 row_layout: QHBoxLayout = QHBoxLayout()
                 row_layout.setSpacing(10)
-
-                # 應用程式名稱區塊
+                # 應用程式名稱
+                app_group = QGroupBox()
                 app_section: QHBoxLayout = QHBoxLayout()
                 app_key_label: QLabel = QLabel("<u>應用程式：</u>")
                 app_value_label: QLabel = QLabel(app_name)
@@ -301,9 +306,11 @@ class PasswordBookGui(QMainWindow):
                 )
                 app_section.addWidget(app_key_label)
                 app_section.addWidget(app_value_label)
-                app_section.addStretch(50)
-
+                app_section.addStretch(20)
+                app_group.setLayout(app_section)
+                app_group.setStyleSheet(group_style)
                 # 帳號區塊
+                acc_group = QGroupBox()
                 acc_section: QHBoxLayout = QHBoxLayout()
                 acc_key_label: QLabel = QLabel("<u>帳號：</u>")
                 acc_value_label: QLabel = QLabel(acc)
@@ -313,9 +320,11 @@ class PasswordBookGui(QMainWindow):
                 )
                 acc_section.addWidget(acc_key_label)
                 acc_section.addWidget(acc_value_label)
-                acc_section.addStretch(50)
-
+                acc_section.addStretch(20)
+                acc_group.setLayout(acc_section)
+                acc_group.setStyleSheet(group_style)
                 # 密碼區塊
+                pwd_group = QGroupBox()
                 pwd_section: QHBoxLayout = QHBoxLayout()
                 pwd_key_label: QLabel = QLabel("<u>密碼：</u>")
                 pwd_value_label: QLabel = QLabel(pwd)
@@ -325,11 +334,15 @@ class PasswordBookGui(QMainWindow):
                 )
                 pwd_section.addWidget(pwd_key_label)
                 pwd_section.addWidget(pwd_value_label)
-                pwd_section.addStretch(50)
+                pwd_section.addStretch(20)
+                pwd_group.setLayout(pwd_section)
+                pwd_group.setStyleSheet(group_style)
                 # 組合三欄位至單一列
-                row_layout.addLayout(app_section)
-                row_layout.addLayout(acc_section)
-                row_layout.addLayout(pwd_section)
+                row_layout.addWidget(app_group)
+                row_layout.addSpacing(70)
+                row_layout.addWidget(acc_group)
+                row_layout.addSpacing(70)
+                row_layout.addWidget(pwd_group)
                 row_layout.addStretch()
                 # 追蹤元件
                 self.data_objs.extend(
