@@ -8,7 +8,7 @@ for dir in dirs:
     if (os.path.isfile(dir)) is True or (os.path.isdir(dir) is False):
         print(f"uploading {dir}")
         full_path = os.path.join(
-            os.path.join(os.path.dirname(__file__), "arttifacts"), dir
+            os.path.join(os.path.dirname(__file__), "artifacts"), dir
         )
         subprocess.run(
             ["gh", "release", "upload", sys.argv[1], dir, f"--repo={sys.argv[2]}"]
