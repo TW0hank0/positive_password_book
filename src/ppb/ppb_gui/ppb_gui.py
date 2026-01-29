@@ -1,4 +1,3 @@
-from logging import Logger
 import os
 import datetime
 import logging
@@ -14,9 +13,11 @@ from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
     QScrollArea,
+    QGroupBox,
 )
 from PySide6.QtCore import QObject, Qt, QPoint, QEvent
 from PySide6.QtGui import (
+    QIcon,
     QMouseEvent,
     QFont,
     QFontDatabase,
@@ -64,7 +65,7 @@ class CustomTitleBar(QWidget):
                 border: none;
                 color: white;
                 font-weight: bold;
-                width: 40px;
+                width: 80px;
                 height: 30px;
                 border-radius: 5px;
             }
@@ -105,7 +106,9 @@ class CustomTitleBar(QWidget):
         self.maximize_button.setStyleSheet(
             "QPushButton:hover { background-color: gray; }"
         )
-        self.close_button.setStyleSheet("QPushButton:hover { background-color: gray; }")
+        self.close_button.setStyleSheet(
+            "QPushButton:hover { background-color: gray; }"
+        )
 
         # 連接按鈕訊號
         self.minimize_button.clicked.connect(self.minimize_window)
@@ -122,13 +125,16 @@ class CustomTitleBar(QWidget):
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.drag_position = (
-                event.globalPosition().toPoint() - self.parent_obj.geometry().topLeft()
+                event.globalPosition().toPoint()
+                - self.parent_obj.geometry().topLeft()
             )
             event.accept()
 
     def mouseMoveEvent(self, event: QMouseEvent):
         if event.buttons() == Qt.MouseButton.LeftButton and self.drag_position:
-            self.parent_obj.move(event.globalPosition().toPoint() - self.drag_position)
+            self.parent_obj.move(
+                event.globalPosition().toPoint() - self.drag_position
+            )
             event.accept()
 
     def minimize_window(self):
@@ -144,11 +150,11 @@ class CustomTitleBar(QWidget):
             self.maximize_button.setText("❐")
 
     def close_window(self):
-        self.parent_obj.close()  # TODO:考慮在未儲存時詢問
+        self.parent_obj.close()  # TODO:在未儲存時詢問
 
 
 class PasswordBookGui(QMainWindow):
-    def __new__(cls, app: QApplication, logger) -> Self:
+    def __new__(cls, app: QApplication, logger: logging.Logger) -> Self:
         cls.title_bar = None
         return super().__new__(cls)
 
@@ -166,7 +172,8 @@ class PasswordBookGui(QMainWindow):
         self.showMaximized()
         # 設定無框視窗
         self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowSystemMenuHint
+            Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowSystemMenuHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         # 字體
@@ -182,11 +189,11 @@ class PasswordBookGui(QMainWindow):
         # central_widget.setStyleSheet("""
         #     QWidget {
         #         background-color: black;
-        #         border-bottom-left-radius: 8px;
-        #         border-bottom-right-radius: 8px;
-        #         border-left: 1px solid #ddd;
-        #         border-right: 1px solid #ddd;
-        #         border-bottom: 1px solid #ddd;
+        #         border-bottom-left-radius: 4px;
+        #         border-bottom-right-radius: 4px;
+        #         border-left: 2px solid #ddd;
+        #         border-right: 2px solid #ddd;
+        #         border-bottom: 2px solid #ddd;
         #     }
         # """)
         # 主佈局
@@ -222,32 +229,37 @@ class PasswordBookGui(QMainWindow):
         )
         top_bar_layout.addWidget(project_name_text)
         top_bar_layout.addWidget(version_text)
+        refresh_button = QPushButton("重新整理")
+        refresh_button.setBaseSize(100, 40)
+        refresh_button.clicked.connect(self._refresh_data)
+        top_bar_layout.addWidget(refresh_button)
         content_layout.addLayout(top_bar_layout)
-        self.app_data_layout = QVBoxLayout()
-        self.app_data_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        app_data_widget = QWidget()
-        app_data_widget.setLayout(self.app_data_layout)
-        app_data_scroll_area = QScrollArea(parent=self)
-        app_data_scroll_area.setAlignment(
+        app_data_layout = QVBoxLayout()
+        app_data_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.app_data_widget = QWidget()
+        # self.app_data_widget.show()
+        self.app_data_widget.setLayout(app_data_layout)
+        self.app_data_scroll_area = QScrollArea()
+        self.app_data_scroll_area.setAlignment(
             Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
         )
-        app_data_scroll_area.setWidget(app_data_widget)
-        app_data_scroll_area.setVerticalScrollBarPolicy(
+        self.app_data_scroll_area.setVerticalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOn
         )
-        app_data_scroll_area.setHorizontalScrollBarPolicy(
+        self.app_data_scroll_area.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOn
         )
-        app_data_scroll_area.setWidgetResizable(True)
-        content_layout.addWidget(app_data_scroll_area)
+        self.app_data_scroll_area.setWidget(self.app_data_widget)
+        # self.app_data_scroll_area.setWidgetResizable(True)
+        content_layout.addWidget(self.app_data_scroll_area)
         ############
         central_widget.setLayout(content_layout)
         # 添加內容區
         main_layout.addWidget(central_widget)
         # 設定主要容器
-        container = QWidget()
-        container.setLayout(main_layout)
-        self.setCentralWidget(container)
+        main_container = QWidget()
+        main_container.setLayout(main_layout)
+        self.setCentralWidget(main_container)
         # 設定初始大小
         self.resize(1080, 720)
         self.setWindowTitle(project_infos["project_name"])
@@ -255,73 +267,85 @@ class PasswordBookGui(QMainWindow):
         self._refresh_data()
 
     def _refresh_data(self):
-        if len(self.data_objs) > 0:
-            for obj in self.data_objs:
-                if hasattr(obj, "hide") is True:
-                    obj.hide()  # pyright: ignore[reportAttributeAccessIssue]
-                obj.deleteLater()
+        # 清空追蹤物件列表（避免累積無效引用）
+        self.data_objs.clear()
+        # 從後端取得最新資料
         self.data = self.backend.password_book_get_data()
         self.logger.info(f"取得後端資料：{self.data}")
+        # 建立全新內容元件與版面配置
+        new_content_widget: QWidget = QWidget()
+        new_layout: QVBoxLayout = QVBoxLayout()
+        new_layout.setAlignment(
+            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
+        )
+        new_layout.setSpacing(15)  # 增加項目間距提升可讀性
+        # 依資料結構建立UI元件
         for app_name in self.data:
             if app_name == "trash_can":
-                pass
-            else:
-                for app_data in self.data[app_name]:
-                    acc = app_data.get("acc", "")
-                    pwd = app_data.get("pwd", "")
-                    layout_h = QHBoxLayout()
-                    layout_app_name = QHBoxLayout()
-                    app_name_key = QLabel("<u>應用程式：</u>")
-                    app_name_value = QLabel(
-                        app_name,
-                    )
-                    layout_app_name.addWidget(app_name_key)
-                    layout_app_name.addWidget(app_name_value)
-                    app_name_value.setTextInteractionFlags(
-                        Qt.TextInteractionFlag.TextSelectableByMouse
-                        | Qt.TextInteractionFlag.TextSelectableByKeyboard
-                    )
-                    layout_acc = QHBoxLayout()
-                    acc_label_key = QLabel(
-                        "<u>帳號：</u>",
-                    )
-                    acc_label_value = QLabel(
-                        acc,
-                    )
-                    acc_label_value.setTextInteractionFlags(
-                        Qt.TextInteractionFlag.TextSelectableByMouse
-                        | Qt.TextInteractionFlag.TextSelectableByKeyboard
-                    )
-                    layout_acc.addWidget(acc_label_key)
-                    layout_acc.addWidget(acc_label_value)
-                    layout_pwd = QHBoxLayout()
-                    pwd_label_key = QLabel(
-                        "<u>密碼：</u>",
-                    )
-                    pwd_label_value = QLabel(
-                        pwd,
-                    )
-                    pwd_label_value.setTextInteractionFlags(
-                        Qt.TextInteractionFlag.TextSelectableByMouse
-                        | Qt.TextInteractionFlag.TextSelectableByKeyboard
-                    )
-                    layout_pwd.addWidget(pwd_label_key)
-                    layout_pwd.addWidget(pwd_label_value)
-                    layout_h.addLayout(layout_app_name)
-                    layout_h.addLayout(layout_acc)
-                    layout_h.addLayout(layout_pwd)
-                    self.app_data_layout.addLayout(layout_h)
-                    # TODO:下方
-                    self.data_objs.append(app_name_value)
-                    self.data_objs.append(acc)
-                    self.data_objs.append(pwd)
-                    self.data_objs.append(layout_h)
-                    self.data_objs.append(layout_app_name)
-                    self.data_objs.append(layout_acc)
-                    self.data_objs.append(layout_pwd)
+                continue
+            for app_data in self.data[app_name]:
+                acc: str = app_data.get("acc", "")
+                pwd: str = app_data.get("pwd", "")
+
+                # 水平容器：單一帳密組合
+                row_layout: QHBoxLayout = QHBoxLayout()
+                row_layout.setSpacing(10)
+
+                # 應用程式名稱區塊
+                app_section: QHBoxLayout = QHBoxLayout()
+                app_key_label: QLabel = QLabel("<u>應用程式：</u>")
+                app_value_label: QLabel = QLabel(app_name)
+                app_value_label.setTextInteractionFlags(
+                    Qt.TextInteractionFlag.TextSelectableByMouse
+                    | Qt.TextInteractionFlag.TextSelectableByKeyboard
+                )
+                app_section.addWidget(app_key_label)
+                app_section.addWidget(app_value_label)
+                app_section.addStretch(50)
+
+                # 帳號區塊
+                acc_section: QHBoxLayout = QHBoxLayout()
+                acc_key_label: QLabel = QLabel("<u>帳號：</u>")
+                acc_value_label: QLabel = QLabel(acc)
+                acc_value_label.setTextInteractionFlags(
+                    Qt.TextInteractionFlag.TextSelectableByMouse
+                    | Qt.TextInteractionFlag.TextSelectableByKeyboard
+                )
+                acc_section.addWidget(acc_key_label)
+                acc_section.addWidget(acc_value_label)
+                acc_section.addStretch(50)
+
+                # 密碼區塊
+                pwd_section: QHBoxLayout = QHBoxLayout()
+                pwd_key_label: QLabel = QLabel("<u>密碼：</u>")
+                pwd_value_label: QLabel = QLabel(pwd)
+                pwd_value_label.setTextInteractionFlags(
+                    Qt.TextInteractionFlag.TextSelectableByMouse
+                    | Qt.TextInteractionFlag.TextSelectableByKeyboard
+                )
+                pwd_section.addWidget(pwd_key_label)
+                pwd_section.addWidget(pwd_value_label)
+                pwd_section.addStretch(50)
+                # 組合三欄位至單一列
+                row_layout.addLayout(app_section)
+                row_layout.addLayout(acc_section)
+                row_layout.addLayout(pwd_section)
+                row_layout.addStretch()
+                # 追蹤元件
+                self.data_objs.extend(
+                    [app_value_label, acc_value_label, pwd_value_label]
+                )
+                new_layout.addLayout(row_layout)
+            # 應用新元件至ScrollArea
+            new_content_widget.setLayout(new_layout)
+            self.app_data_scroll_area.setWidget(new_content_widget)
+            self.app_data_widget = new_content_widget  # 更新引用
 
     def changeEvent(self, event: QEvent):
-        if event.type() == QEvent.Type.WindowStateChange and self.title_bar is not None:
+        if (
+            event.type() == QEvent.Type.WindowStateChange
+            and self.title_bar is not None
+        ):
             if self.isMaximized():
                 self.title_bar.maximize_button.setText("❐")
             else:
@@ -344,6 +368,9 @@ def main(logger):
     #
     window = PasswordBookGui(app, logger)
     window.show()
+    app.setWindowIcon(
+        QIcon(os.path.join(project_infos["project_path"], "icon.png"))
+    )
     app.exec()
 
 
