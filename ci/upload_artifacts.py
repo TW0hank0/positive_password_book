@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 
-dirs = os.listdir(os.path.join(os.path.dirname(__file__), "arttifacts"))
+dirs = os.listdir(os.path.join(os.path.dirname(__file__), "artifacts"))
 for dir in dirs:
     print(f"dir now: {dir}")
     if os.path.isfile(dir) is True:
