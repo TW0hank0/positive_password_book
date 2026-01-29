@@ -2,22 +2,22 @@ import os
 import subprocess
 import sys
 
-dirs = os.listdir(os.path.join(os.path.dirname(__file__), "..", "artifacts"))
+path = os.path.join(os.path.dirname(__file__), "..", "artifacts")
+dirs = os.listdir(path)
 for dir in dirs:
     print(f"dir now: {dir}")
     if (os.path.isfile(dir)) is True or (os.path.isdir(dir) is False):
+        full_path = os.path.join(path, dir)
         print(f"uploading {dir}")
-        full_path = os.path.join(
-            os.path.join(os.path.dirname(__file__), "artifacts"), dir
-        )
         subprocess.run(
-            ["gh", "release", "upload", sys.argv[1], dir, f"--repo={sys.argv[2]}"]
+            [
+                "gh",
+                "release",
+                "upload",
+                sys.argv[1],
+                full_path,
+                f"--repo={sys.argv[2]}",
+            ]
         )
     else:
-        print(
-            "dir files:{}".format(
-                os.listdir(
-                    os.path.join(os.path.dirname(__file__), "..", "artifacts", dir)
-                )
-            )
-        )
+        print("dir files:{}".format(os.listdir(os.path.join(path, dir))))
