@@ -21,6 +21,8 @@ from PySide6.QtGui import (
     QMouseEvent,
     QFont,
     QFontDatabase,
+    QColor,
+    QPalette,
 )
 
 from positive_tool import pt
@@ -229,6 +231,13 @@ class PasswordBookGui(QMainWindow):
         self.scroll_area.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOn
         )
+        # 設定ScrollArea背景顏色
+        scroll_palette = self.scroll_area.palette()
+        scroll_palette.setColor(
+            QPalette.ColorRole.Window, QColor("#f0f0f0")
+        )  # 設定背景色
+        self.scroll_area.setPalette(scroll_palette)
+        self.scroll_area.setAutoFillBackground(True)
         # 建立內容容器
         self.content_container = QWidget()
         self.content_layout = QVBoxLayout()
@@ -293,7 +302,9 @@ class PasswordBookGui(QMainWindow):
         if len([k for k in self.data.keys() if k != "trash_can"]) == 0:
             no_data_label = QLabel("目前沒有任何資料")
             no_data_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            no_data_label.setStyleSheet("color: gray; font-size: 16px;")
+            no_data_label.setStyleSheet(
+                "color: gray; font-size: 16px; font-style: italic;"
+            )
             self.content_layout.addWidget(no_data_label)
 
         self.logger.info("資料重新整理完成")
@@ -377,7 +388,6 @@ if __name__ == "__main__":
     log_dir = os.path.join(project_path, ".logs")
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
-
     time_now = datetime.datetime.now()
     time_format_str = time_now.strftime("%Y-%d-%m_%H-%M-%S")
     log_file_path = os.path.join(log_dir, f"log_{time_format_str}.log")

@@ -1,13 +1,13 @@
 import json
-import os
+# import os
 
-from typing import Literal, Union, Optional
+from typing import Literal, Union
 
-import typer
+# import typer
 
 from positive_tool.arg import ArgType
 
-from ..project_infos import project_infos
+# from ..project_infos import project_infos
 
 
 data_type = dict[
@@ -23,11 +23,8 @@ data_type = dict[
     ],
 ]
 
-backend_cli = typer.Typer()
-
 
 class PasswordBookSystem:
-    global data_type
     _data: data_type
 
     def __init__(self, file_path: str | None = None) -> None:
@@ -43,9 +40,7 @@ class PasswordBookSystem:
         self._data = {"trash_can": []}
 
     def password_book_load(self, file_path: str):
-        ArgType(
-            "file_path", file_path, str, is_exists=True, is_file=True
-        )
+        ArgType("file_path", file_path, str, is_exists=True, is_file=True)
         #
         with open(file_path, "r", encoding="utf-8") as f:
             file_data: dict = json.load(f)
@@ -123,6 +118,7 @@ class PasswordBookSystem:
                 raise IndexError()
 
     def password_book_move_to_trash_can(self, app: str, acc: str):
+        # TODO:finish it
         if app in list(self._data.keys()):
             for i in self._data[app]:
                 if i["acc"] == acc:
@@ -136,6 +132,7 @@ class PasswordBookSystem:
         return self._data
 
     def password_book_search(self, app: str) -> list | None:
+        # TODO:finish it
         if app != "trash_can" and app in list(self._data.keys()):
             app_datas: list = self._data[app]
             return app_datas
@@ -144,56 +141,3 @@ class PasswordBookSystem:
 
     def __str__(self) -> str:
         return f"""PasswordBookSystem(_data={self._data})"""
-
-
-server_text_arg_type = dict[str, list]
-"""例：
-{
-    "actions": [
-        "get_data"
-    ]
-}"""
-
-
-def server_text(server_text_arg: server_text_arg_type):
-    backend = PasswordBookSystem(
-        os.path.join(
-            project_infos["project_path"], "password_data.json"
-        )
-    )
-    print(server_text_arg)
-    for action in server_text_arg["actions"]:
-        if "get_data" in action:
-            print(str(backend.password_book_get_data()))
-
-
-@backend_cli.command()
-def server(
-    server_type: Literal["text"] = "text",
-    server_text_arg: Optional[str] = None,
-):  # TODO:待支持檔案方式
-    if server_type == "text":
-        if type(server_text_arg) is str:
-            server_text(json.loads(server_text_arg))
-        else:
-            print(
-                f"錯誤！server_text_arg錯誤類型：{type(server_text_arg)}"
-            )
-    else:
-        print(f"錯誤！server_type=「{server_type}」")
-
-
-@backend_cli.command()
-def main(start_server: bool = True, show_version: bool = False):
-    if show_version is True:
-        print(f"PPB version v{project_infos['version']}")
-    if start_server is True:
-        server()
-
-
-def launch():
-    backend_cli()
-
-
-if __name__ == "__main__":
-    launch()

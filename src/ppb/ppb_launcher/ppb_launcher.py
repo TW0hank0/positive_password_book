@@ -1,11 +1,8 @@
 import os
 import datetime
 import sys
-# import subprocess
-# import platform
-# import webbrowser
+import traceback
 
-# from traceback import print_exception
 from typing import Literal
 
 import typer
@@ -36,7 +33,7 @@ app_cli = typer.Typer(name=PROJECT_NAME, pretty_exceptions_short=False)
 
 
 @app_cli.command()
-def main(app_mode: Literal["tui", "gui"] = "tui"):
+def main(app_mode: Literal["tui", "gui", "cli"] = "tui"):
     """PPB 啟動器"""
     log_dir = os.path.join(project_path, ".ppb_logs")
     if os.path.exists(log_dir) is False or os.path.isdir(log_dir) is False:
@@ -49,24 +46,44 @@ def main(app_mode: Literal["tui", "gui"] = "tui"):
     )
     if logger is None:
         raise RuntimeError("日志系統初始化失敗！")
-    if app_mode == "gui":
-        logger.info("啟動GUI...")
-        from ..ppb_gui import ppb_gui
+    else:
+        match app_mode:
+            case "gui":
+                logger.info("啟動GUI...")
+                from ..ppb_gui import ppb_gui
 
-        try:
-            ppb_gui.main(logger)
-        except Exception as e:
-            logger.critical(f"GUI異常關閉！錯誤訊息：「{e}」")
-            raise e
-    elif app_mode == "tui":
-        logger.info("啟動TUI")
-        from ..ppb_tui import ppb_tui
+                try:
+                    ppb_gui.main(logger)
+                except Exception as e:
+                    logger.critical(f"GUI異常關閉！錯誤訊息：「{e}」")
+                    logger.critical(
+                        f"GUI異常關閉！traceback：「{traceback.format_exc()}」"
+                    )
+                    raise e
+            case "tui":
+                logger.info("啟動TUI...")
+                from ..ppb_tui import ppb_tui
 
-        try:
-            ppb_tui.main(logger, version)
-        except Exception as e:
-            logger.critical(f"TUI異常關閉！錯誤訊息：「{e}」")
-            raise e
+                try:
+                    ppb_tui.main(logger, version)
+                except Exception as e:
+                    logger.critical(f"TUI異常關閉！錯誤訊息：「{e}」")
+                    logger.critical(
+                        f"TUI異常關閉！traceback：「{traceback.format_exc()}」"
+                    )
+                    raise e
+            case "cli":
+                logger.info("啟動CLI...")
+                from ..ppb_cli import ppb_cli
+
+                try:
+                    ppb_cli.main(logger)
+                except Exception as e:
+                    logger.critical(f"CLI異常關閉！錯誤訊息：「{e}」")
+                    logger.critical(
+                        f"CLI異常關閉！traceback：「{traceback.format_exc()}」"
+                    )
+                    raise e
 
 
 def launch():

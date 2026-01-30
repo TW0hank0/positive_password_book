@@ -5,6 +5,7 @@
 **目前計劃**
 - 完成GUI
 - 讓`ppb_launcher`可以啟動GUI
+- 修復CI
 - CI檔名要寫系統
 
 **1.0.0**
@@ -14,9 +15,10 @@
 - [ ] 支持使用者設定
 - [ ] 設定框架移至`ppb_backend`
 - [ ] 修改已創建的帳號
-- [ ] CI支援GUI/TUI/FUll(GUI+TUI)三個版本
+- [ ] CI支援GUI/TUI/CLI/FUll(GUI+TUI+CLI)4個版本
 
 **未來計畫**
 - [ ] 分離`ppb_backend`內的`ppb_cli`
 - [ ] `ppb_backend`:收尋功能
 - [ ] 更新positive_tool
+- [ ] 資料可複製

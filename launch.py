@@ -1,8 +1,8 @@
-from src.ppb.ppb_launcher import launcher
+from src.ppb.ppb_launcher import ppb_launcher
 
 
 def main():
-    launcher.launch()
+    ppb_launcher.launch()
 
 
 if __name__ == "__main__":

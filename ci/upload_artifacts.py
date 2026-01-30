@@ -2,7 +2,9 @@ import os
 import subprocess
 import sys
 
-path = os.path.join(os.path.dirname(__file__), "..", "artifacts")
+path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "artifacts")
+)
 dirs = os.listdir(path)
 for dir in dirs:
     print(f"dir now: {dir}")
