@@ -5,7 +5,7 @@ from typing import Literal, Union
 
 # import typer
 
-from positive_tool.arg import ArgType
+from positive_tool.verify import ArgType
 
 # from ..project_infos import project_infos
 

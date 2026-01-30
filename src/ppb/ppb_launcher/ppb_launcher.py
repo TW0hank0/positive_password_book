@@ -9,7 +9,7 @@ import typer
 
 from rich.traceback import install as tb_install
 
-from positive_tool import pt
+from positive_tool import pt, verify
 
 if hasattr(sys, "_MEIPASS") is False:
     sys.path.insert(
@@ -23,18 +23,15 @@ tb_install(show_locals=True)
 PROJECT_NAME: str = project_infos["project_name"]
 project_path: str = project_infos["project_path"]
 version = project_infos["version"]
-# PROJECT_NAME = "positive_password_book"
-# if hasattr(sys, "_MEIPASS") is True:
-#     # project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(sys.executable))
-#     project_path = os.path.dirname(sys.executable)
-# else:
-#     project_path = pt.find_project_path(PROJECT_NAME, os.path.dirname(__file__))
 app_cli = typer.Typer(name=PROJECT_NAME, pretty_exceptions_short=False)
 
 
 @app_cli.command()
 def main(app_mode: Literal["tui", "gui", "cli"] = "tui"):
     """PPB 啟動器"""
+    #
+    verify.ArgType("app_mode", app_mode, Literal["tui", "gui", "cli"])
+    #
     log_dir = os.path.join(project_path, ".ppb_logs")
     if os.path.exists(log_dir) is False or os.path.isdir(log_dir) is False:
         os.mkdir(log_dir)

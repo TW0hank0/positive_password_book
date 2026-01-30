@@ -6,8 +6,8 @@ description = "一個密碼本"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "positive-tool>=0.6.0",
     "typer~=0.20.1",
-    "positive_tool @ https://github.com/TW0hank0/positive_tool/releases/download/v0.6.1/positive_tool-0.6.0-py3-none-any.whl",
 ]
 
 [project.optional-dependencies]
@@ -62,5 +62,5 @@ exclude = [
     "addons",
     "fonts",
 ]
-line-length = 80
+line-length = 75
 indent-width = 4
