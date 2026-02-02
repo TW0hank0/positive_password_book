@@ -17,8 +17,7 @@
 - [ ] 修改已創建的帳號
 - [ ] CI支援GUI/TUI/CLI/FUll(GUI+TUI+CLI)4個版本
 
-**所有計畫**
-- [ ] 分離`ppb_backend`內的`ppb_cli`
+**未來計畫**
 - [ ] `ppb_backend`:收尋功能
-- [x] 更新positive_tool
 - [ ] 資料可複製
+- [ ] 標籤(tag)
