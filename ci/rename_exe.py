@@ -24,8 +24,8 @@ def main():
                 break
         else:
             raise FileNotFoundError
-    if len(sys.argv) >= 4 and sys.argv[3] != "--pre":
-        pyver = sys.argv[3]
+    if len(sys.argv) >= 3 and sys.argv[2] != "--pre":
+        pyver = sys.argv[2]
     else:
         pyver = "unknown-python"
     if len(sys.argv) >= 2 and sys.argv[1] != "--pre":
