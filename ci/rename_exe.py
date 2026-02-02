@@ -9,11 +9,17 @@ def main():
         orig = os.path.abspath(sys.argv[2])
     else:
         for i in os.listdir(
-            os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "dist")
+            os.path.join(
+                os.path.abspath(os.path.dirname(__file__)),
+                "..",
+                "dist",
+            )
         ):
-            if i.startswith("positive_password_book"):
+            if i.startswith("ppb"):
                 orig = os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), "..", "dist", i)
+                    os.path.join(
+                        os.path.dirname(__file__), "..", "dist", i
+                    )
                 )
                 break
         else:
@@ -21,12 +27,17 @@ def main():
     if len(sys.argv) >= 4 and sys.argv[3] != "--pre":
         pyver = sys.argv[3]
     else:
-        pyver = "unknown"
+        pyver = "unknown-python"
     if len(sys.argv) >= 2 and sys.argv[1] != "--pre":
         ver = sys.argv[1]
     else:
         d = tomllib.load(
-            open(os.path.join(os.path.dirname(__file__), "..", "pyproject.toml"), "rb")
+            open(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "pyproject.toml"
+                ),
+                "rb",
+            )
         )
         ver = d["project"]["version"]
     root, ext = os.path.splitext(os.path.basename(orig))
