@@ -24,4 +24,4 @@ uv run launch_tui.py
 ```
 
 ## 協議
-請遵守本專案使用的AGPL-3.0協議
+請遵守AGPL-3.0協議
