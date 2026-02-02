@@ -286,7 +286,8 @@ jobs:
             --repo="${{ github.repository }}"
           echo '----Get Upload Url----'
           upload_url_base=$(gh api \
-            repos/TW0hank0/positive_password_book/releases/tags/ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui)
+            repos/{owner}/{repo}/releases/tags/ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui)
+          echo 'upload_url_base=$upload_url_base'
           echo '----upload----'
           set -euo pipefail
           upload_url="${upload_url_base%\{*}"
@@ -295,7 +296,7 @@ jobs:
           for f in artifacts/**; do
             if [ -f "$f" ]; then
               echo "Uploading $f"
-              curl -sS -X POST \
+              curl -X POST \
                 -H "Authorization: token $GITHUB_TOKEN" \
                 -H "Content-Type: application/octet-stream" \
                 --data-binary @"$f" \
