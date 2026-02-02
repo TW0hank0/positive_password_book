@@ -274,7 +274,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" \
+          echo '----create_release----'
+          upload_url_base=$(gh release create "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" \
             --title "ci-positive_password_book_tui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ github.sha }}+${{ steps.get_datetime.outputs.datetime }}" \
             --notes "**這是使用CI製作的TUI測試版，使用github action製作**
             - 版本： ${{ steps.get_version.outputs.version }}
@@ -282,12 +283,29 @@ jobs:
             > UTC時間：臺北時間-8 
             - github_sha： ${{ github.sha }}" \
             --prerelease \
-            --repo="${{ github.repository }}"
+            --repo="${{ github.repository }}"\
+            --json uploadUrl \
+            --jq '.uploadUrl')
+          echo '----upload----'
+          set -euo pipefail
+          upload_url="${upload_url_base%\{*}"
+          echo "Uploading artifacts to $upload_url"
+          shopt -s globstar || true
+          for f in artifacts/**; do
+            if [ -f "$f" ]; then
+              echo "Uploading $f"
+              curl -sS -X POST \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                -H "Content-Type: application/octet-stream" \
+                --data-binary @"$f" \
+                "$upload_url?name=$(basename "$f")"
+            fi
+          done
 
-      - name: Upload all files in artifacts/
-        id: upload_artifacts
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd ci
-          uv run upload_artifacts.py "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" ${{ github.repository }}
+      #- name: Upload all files in artifacts/
+        #id: upload_artifacts
+        #env:
+          #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        #run: |
+          #cd ci
+          #uv run upload_artifacts.py "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" ${{ github.repository }}
