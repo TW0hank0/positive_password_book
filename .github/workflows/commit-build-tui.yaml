@@ -276,7 +276,7 @@ jobs:
         run: |
           echo '----create_release----'
           gh release create "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" \
-            --title "ci-PPB_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ github.sha }}+${{ steps.get_datetime.outputs.datetime }}" \
+            --title "ci-PPB_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_datetime.outputs.datetime }} (${{ github.sha }})" \
             --notes "**這是使用Github Action製作的TUI測試版**
             - 版本： ${{ steps.get_version.outputs.version }}
             - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}
@@ -286,7 +286,8 @@ jobs:
             --repo="${{ github.repository }}"
           echo '----Get Upload Url----'
           upload_url_base=$(gh api \
-            repos/{owner}/{repo}/releases/tags/ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui)
+            repos/{owner}/{repo}/releases/tags/ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui \
+            --jq '.upload_url')
           echo 'upload_url_base=$upload_url_base'
           echo '----upload----'
           set -euo pipefail
