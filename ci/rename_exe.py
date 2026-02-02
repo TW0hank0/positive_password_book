@@ -5,7 +5,7 @@ import platform
 
 
 def main():
-    if len(sys.argv) >= 3 and sys.argv[2] != "--pre":
+    if len(sys.argv) >= 3 and sys.argv[2] != "--pre" and False:
         orig = os.path.abspath(sys.argv[2])
     else:
         for i in os.listdir(
