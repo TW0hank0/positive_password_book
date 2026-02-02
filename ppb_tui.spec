@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='positive_password_book_tui',
+    name='ppb_tui',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

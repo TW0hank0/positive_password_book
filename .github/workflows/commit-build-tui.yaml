@@ -146,14 +146,14 @@ jobs:
         uses: actions/upload-artifact@v4
         if: runner.os == 'Windows'
         with:
-          name: positive_password_book_launch_tui_${{ matrix.python }}.exe
+          name: ppb_tui_${{ matrix.python }}.exe
           path: dist/*
 
       - name: Upload exe artifact (Linux)
         uses: actions/upload-artifact@v4
         if: runner.os == 'Linux'
         with:
-          name: positive_password_book_launch_tui_${{ matrix.python }}
+          name: ppb_tui_${{ matrix.python }}
           path: dist/*
 
       # - name: Get datetime (Linux)
@@ -276,7 +276,7 @@ jobs:
         run: |
           echo '----create_release----'
           gh release create "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" \
-            --title "ci-PPB_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_datetime.outputs.datetime }} (${{ github.sha }})" \
+            --title "ci-PPB_tui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_datetime.outputs.datetime }} (${{ github.sha }})" \
             --notes "**這是使用Github Action製作的TUI測試版**
             - 版本： ${{ steps.get_version.outputs.version }}
             - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}

@@ -34,20 +34,6 @@ jobs:
       - name: Build executable with pyinstaller
         run: uv run pyinstaller ppb_gui.spec
 
-      - name: Upload exe artifact (Windows)
-        uses: actions/upload-artifact@v4
-        if: runner.os == 'Windows'
-        with:
-          name: positive_password_book_launch_gui_${{ matrix.python }}.exe
-          path: dist/*
-
-      - name: Upload exe artifact (Linux)
-        uses: actions/upload-artifact@v4
-        if: runner.os == 'Linux'
-        with:
-          name: positive_password_book_launch_gui_${{ matrix.python }}
-          path: dist/*
-
       - name: Prepare CI Venv (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -156,54 +142,151 @@ jobs:
           echo "exe_path=$exe_path" >> $env:GITHUB_OUTPUT
           cd ..
 
-      - name: Get datetime (Linux)
-        id: get_datetime_linux
+      - name: Upload exe artifact (Windows)
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: positive_password_book_launch_gui_${{ matrix.python }}.exe
+          path: dist/*
+
+      - name: Upload exe artifact (Linux)
+        uses: actions/upload-artifact@v4
         if: runner.os == 'Linux'
+        with:
+          name: positive_password_book_launch_gui_${{ matrix.python }}
+          path: dist/*
+
+      # - name: Get datetime (Linux)
+      #   id: get_datetime_linux
+      #   if: runner.os == 'Linux'
+      #   run: |
+      #     cd ci
+      #     datetime=$(uv run get_datetime.py)
+      #     echo "datetime=$datetime" >> $GITHUB_OUTPUT
+      #     cd ..
+
+      # - name: Get datetime (Windows)
+      #   id: get_datetime_windows
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     cd ci
+      #     $datetime = uv run --with tzdata get_datetime.py
+      #     echo "datetime=$datetime" >> $env:GITHUB_OUTPUT
+      #     cd ..
+
+      # - name: Create prerelease and upload wheel (Linux)
+      #   uses: ncipollo/release-action@v1
+      #   if: runner.os == 'Linux'
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: v${{ steps.get_version_linux.outputs.version }}-gui-pre-${{ steps.get_sha_linux.outputs.short_sha }}-${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}__${{ matrix.python }}
+      #     name: positive_password_book_gui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_sha_linux.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}
+      #     prerelease: true
+      #     artifacts: ${{ steps.rename_exe_linux.outputs.exe_path }}
+      #     body: |
+      #       **這是GUI測試版，使用github action製作**
+      #       - 系統： ${{ matrix.os }}
+      #       - 版本： ${{ steps.get_version_linux.outputs.version }}
+      #       - 臺北時間： ${{ steps.get_datetime_linux.outputs.datetime }}
+      #       > UTC時間：臺北時間-8
+      #       - github_sha（完整）： ${{ github.sha }}
+
+      # - name: Create prerelease and upload wheel (Windows)
+      #   uses: ncipollo/release-action@v1
+      #   if: runner.os == 'Windows'
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: v${{ steps.get_version_windows.outputs.version }}-gui-pre-${{ steps.get_sha_windows.outputs.short_sha }}-${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}__${{ matrix.python }}
+      #     name: positive_password_book_gui_pre-release+${{ steps.get_version_windows.outputs.version }}+${{ steps.get_sha_windows.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}
+      #     prerelease: true
+      #     artifacts: ${{ steps.rename_exe_windows.outputs.exe_path }}
+      #     body: |
+      #       **這是GUI測試版，使用github action製作**
+      #       - 系統： ${{ matrix.os }}
+      #       - 版本： ${{ steps.get_version_windows.outputs.version }}
+      #       - 臺北時間： ${{ steps.get_datetime_windows.outputs.datetime }}
+      #       > UTC時間：臺北時間-8
+      #       - github_sha（完整）： ${{ github.sha }}
+
+
+  upload:
+    needs: build_exec
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Prepare CI Venv
+        run: |
+          cd ci
+          uv venv --python cpython-3.13
+          cd ..
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+    
+      - name: Get datetime
+        id: get_datetime
         run: |
           cd ci
           datetime=$(uv run get_datetime.py)
           echo "datetime=$datetime" >> $GITHUB_OUTPUT
           cd ..
 
-      - name: Get datetime (Windows)
-        id: get_datetime_windows
-        if: runner.os == 'Windows'
+      - name: Get package get_version
+        id: get_version
         run: |
           cd ci
-          $datetime = uv run --with tzdata get_datetime.py
-          echo "datetime=$datetime" >> $env:GITHUB_OUTPUT
+          version=$(uv run get_version.py)
           cd ..
+          echo "version=$version" >> $GITHUB_OUTPUT
 
-      - name: Create prerelease and upload wheel (Linux)
-        uses: ncipollo/release-action@v1
-        if: runner.os == 'Linux'
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ steps.get_version_linux.outputs.version }}-gui-pre-${{ steps.get_sha_linux.outputs.short_sha }}-${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}__${{ matrix.python }}
-          name: positive_password_book_gui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_sha_linux.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_linux.outputs.datetime }}__${{ matrix.os }}
-          prerelease: true
-          artifacts: ${{ steps.rename_exe_linux.outputs.exe_path }}
-          body: |
-            **這是GUI測試版，使用github action製作**
-            - 系統： ${{ matrix.os }}
-            - 版本： ${{ steps.get_version_linux.outputs.version }}
-            - 臺北時間： ${{ steps.get_datetime_linux.outputs.datetime }}
-            > UTC時間：臺北時間-8
-            - github_sha（完整）： ${{ github.sha }}
+      - name: List Dir (for debug)
+        run: |
+          ls .
+          echo '--------'
+          ls artifacts
+          echo '--------'
+          ls -la artifacts
 
-      - name: Create prerelease and upload wheel (Windows)
-        uses: ncipollo/release-action@v1
-        if: runner.os == 'Windows'
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ steps.get_version_windows.outputs.version }}-gui-pre-${{ steps.get_sha_windows.outputs.short_sha }}-${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}__${{ matrix.python }}
-          name: positive_password_book_gui_pre-release+${{ steps.get_version_windows.outputs.version }}+${{ steps.get_sha_windows.outputs.short_sha }}+${{ matrix.python }}+${{ steps.get_datetime_windows.outputs.datetime }}__${{ matrix.os }}
-          prerelease: true
-          artifacts: ${{ steps.rename_exe_windows.outputs.exe_path }}
-          body: |
-            **這是GUI測試版，使用github action製作**
-            - 系統： ${{ matrix.os }}
-            - 版本： ${{ steps.get_version_windows.outputs.version }}
-            - 臺北時間： ${{ steps.get_datetime_windows.outputs.datetime }}
-            > UTC時間：臺北時間-8
-            - github_sha（完整）： ${{ github.sha }}
+      - name: Create Prerelease via GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo '----create_release----'
+          gh release create "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-gui" \
+            --title "ci-PPB_gui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_datetime.outputs.datetime }} (${{ github.sha }})" \
+            --notes "**這是使用Github Action製作的GUI測試版**
+            - 版本： ${{ steps.get_version.outputs.version }}
+            - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}
+            > UTC時間：臺北時間-8 
+            - github_sha： ${{ github.sha }}" \
+            --prerelease \
+            --repo="${{ github.repository }}"
+          echo '----Get Upload Url----'
+          upload_url_base=$(gh api \
+            repos/{owner}/{repo}/releases/tags/ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-gui \
+            --jq '.upload_url')
+          echo 'upload_url_base=$upload_url_base'
+          echo '----upload----'
+          set -euo pipefail
+          upload_url="${upload_url_base%\{*}"
+          echo "Uploading artifacts to $upload_url"
+          shopt -s globstar || true
+          for f in artifacts/**; do
+            if [ -f "$f" ]; then
+              echo "Uploading $f"
+              curl -X POST \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                -H "Content-Type: application/octet-stream" \
+                --data-binary @"$f" \
+                "$upload_url?name=$(basename "$f")"
+            fi
+          done
