@@ -19,3 +19,7 @@ class BackendDeleteError(PPBBackendError):
     """刪除時發生錯誤
     可能原因
     - 資料不存在"""
+
+
+class BackendEncryptError(PPBBackendError):
+    """加密/解密時發生錯誤"""
