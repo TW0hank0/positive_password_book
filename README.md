@@ -1,5 +1,7 @@
 # positive_password_book
 
+![icon](./icon.png)
+
 **中文** | [English](READMEs/README_en.md)
 
 最後更改：
