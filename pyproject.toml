@@ -6,7 +6,7 @@ description = "一個密碼本"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "positive-tool>=0.6.0",
+    "positive-tool~=0.6.0",
     "typer~=0.20.1",
 ]
 

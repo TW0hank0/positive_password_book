@@ -28,5 +28,6 @@
     "python.venvPath": ".venv",
     "basedpyright.analysis.autoSearchPaths": true,
     "editor.cursorStyle": "line",
-    "editor.overtypeCursorStyle": "block"
+    "editor.overtypeCursorStyle": "block",
+    "python.REPL.enableREPLSmartSend": false
 }
