@@ -1,0 +1,238 @@
+name: commit-build-cli
+
+permissions:
+  contents: write
+
+on:
+  push:
+
+jobs:
+  build_exec:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [cpython-3.13, pypy-3.11]
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python with uv
+        run: uv python install ${{ matrix.python }}
+
+      - name: Create venv
+        run: uv venv
+
+      - name: Install project dependencies with uv
+        run: uv sync --extra build
+
+      - name: Build executable with pyinstaller
+        run: uv run pyinstaller ppb_cli.spec
+
+      - name: Prepare CI Venv (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cd ci
+          uv venv --python cpython-3.13
+          cd ..
+
+      - name: Prepare CI Venv (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd ci
+          uv venv --python cpython-3.13
+          uv pip install tzdata
+          cd ..
+
+      - name: Get package version (Linux)
+        id: get_version_linux
+        if: runner.os == 'Linux'
+        run: |
+          cd ci
+          version=$(uv run get_version.py)
+          cd ..
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Get package version (Winodws)
+        id: get_version_windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd ci
+          $version = uv run get_version.py
+          cd ..
+          echo "Version: $version"
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Find built exe (Linux)
+        id: find_exe_linux
+        if: runner.os == 'Linux'
+        run: |
+          cd ci
+          file=$(uv run find_exe.py)
+          cd ..
+          echo "exe_path=$file" >> $GITHUB_OUTPUT
+          echo "exe_name=$(basename \"$file\")" >> $GITHUB_OUTPUT
+
+      - name: Find built exe (Windows)
+        id: find_exe_windows
+        if: runner.os == 'Windows'
+        run: |
+          cd ci
+          $file = uv run find_exe.py
+          echo "exe_path=$file" >> $env:GITHUB_OUTPUT
+          echo "exe_name=$(uv run python -c "import os; print(os.path.basename('$file'))")" >> $env:GITHUB_OUTPUT
+          cd ..
+
+      - name: Show dist contents (debug)
+        shell: bash
+        run: |
+          echo "PWD: $(pwd)"
+          ls -la dist || true
+          echo '---'
+          ls
+
+      # - name: Get short SHA (Linux)
+      #   id: get_sha_linux
+      #   if: runner.os == 'Linux'
+      #   run: |
+      #     cd ci
+      #     short=$(uv run get_sha.py $GITHUB_SHA)
+      #     echo "short_sha=$short" >> $GITHUB_OUTPUT
+      #     cd ..
+
+      # - name: Get short SHA (Windows)
+      #   id: get_sha_windows
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     cd ci
+      #     $short = uv run get_sha.py $env:GITHUB_SHA
+      #     cd ..
+      #     echo "short_sha=$short" >> $env:GITHUB_OUTPUT
+
+      - name: Rename exe to include version (Linux)
+        id: rename_exe_linux
+        if: runner.os == 'Linux'
+        env:
+          ORIG: ${{ steps.find_exe_linux.outputs.exe_path }}
+          VER: ${{ steps.get_version_linux.outputs.version }}
+        run: |
+          cd ci
+          exe_path=$(python rename_exe.py $VER ${{ matrix.python }} --pre)
+          echo "exe_path=$exe_path" >> $GITHUB_OUTPUT
+          cd ..
+
+      - name: Rename exe to include version (Windows)
+        id: rename_exe_windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          ORIG: ${{ steps.find_exe_windows.outputs.exe_path }}
+          VER: ${{ steps.get_version_windows.outputs.version }}
+          PYVER: ${{ matrix.python }}
+        run: |
+          cd ci
+          $exe_path = uv run rename_exe.py ${{ steps.get_version_windows.outputs.version }} ${{ matrix.python }} --pre
+          echo "exe_path=$exe_path" >> $env:GITHUB_OUTPUT
+          cd ..
+
+      - name: Upload exe artifact (Windows)
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: ppb_tui_${{ matrix.python }}.exe
+          path: dist/*
+
+      - name: Upload exe artifact (Linux)
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: ppb_tui_${{ matrix.python }}
+          path: dist/*
+
+  upload:
+    needs: build_exec
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Prepare CI Venv
+        run: |
+          cd ci
+          uv venv --python cpython-3.13
+          cd ..
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+    
+      - name: Get datetime
+        id: get_datetime
+        run: |
+          cd ci
+          datetime=$(uv run get_datetime.py)
+          echo "datetime=$datetime" >> $GITHUB_OUTPUT
+          cd ..
+
+      - name: Get package get_version
+        id: get_version
+        run: |
+          cd ci
+          version=$(uv run get_version.py)
+          cd ..
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: List Dir (for debug)
+        run: |
+          ls .
+          echo '--------'
+          ls artifacts
+          echo '--------'
+          ls -la artifacts
+
+      - name: Create Prerelease via GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo '----create_release----'
+          gh release create "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-cli" \
+            --title "ci-PPB_cli_pre-${{ steps.get_version_linux.outputs.version }}+${{ steps.get_datetime.outputs.datetime }} (${{ github.sha }})" \
+            --notes "**這是使用Github Action製作的CLI測試版**
+            - 版本： ${{ steps.get_version.outputs.version }}
+            - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}
+            - github_sha： ${{ github.sha }}" \
+            --prerelease \
+            --repo="${{ github.repository }}"
+          echo '----Get Upload Url----'
+          upload_url_base=$(gh api \
+            repos/{owner}/{repo}/releases/tags/ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui \
+            --jq '.upload_url')
+          echo 'upload_url_base=$upload_url_base'
+          echo '----upload----'
+          set -euo pipefail
+          upload_url="${upload_url_base%\{*}"
+          echo "Uploading artifacts to $upload_url"
+          shopt -s globstar || true
+          for f in artifacts/**; do
+            if [ -f "$f" ]; then
+              echo "Uploading $f"
+              curl -X POST \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                -H "Content-Type: application/octet-stream" \
+                --data-binary @"$f" \
+                "$upload_url?name=$(basename "$f")"
+            fi
+          done

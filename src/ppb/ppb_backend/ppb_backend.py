@@ -79,16 +79,16 @@ class PasswordBookSystem:
         with open(file_path, "r", encoding="utf-8") as f:
             file_data: file_content_type = json.load(f)
         if type(file_data["encrypt_data"]) is str:
-            cls(
-                json.loads(
-                    decrypt_data(
-                        base64.b64decode(file_data["encrypt_data"]),
-                        encrypt_password,
-                    ).decode("utf-8")
-                ),
-                is_encrypt=True,
-                encrypt_password=encrypt_password,
+            data_bytes = decrypt_data(
+                base64.b64decode(file_data["encrypt_data"]),
+                encrypt_password,
             )
+            if type(data_bytes) is bytes:
+                cls(
+                    json.loads(data_bytes.decode("utf-8")),
+                    is_encrypt=True,
+                    encrypt_password=encrypt_password,
+                )
         else:
             pass
             # TODO
