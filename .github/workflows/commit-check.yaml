@@ -1,0 +1,42 @@
+name: commit-check
+
+on:
+  push:
+    path-ignores: 
+      - 'README.md'
+      - 'READMEs/**'
+      - '.vscode/**'
+
+jobs:
+  check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: [cpython-3.13]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python with uv
+        run: uv python install ${{ matrix.python }}
+
+      - name: Create venv
+        run: uv venv
+
+      - name: Install project dependencies with uv
+        run: uv sync --all-extras
+
+      - name: check use ruff
+        run: uv run ruff check .
+
+      - name: check use ty
+        run: uv run ty check .
+
+      - name: check use mypy
+        run: uv run mypy .

@@ -5,16 +5,13 @@ license = "AGPL-3.0-only"
 description = "一個密碼本"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "cryptography>=46.0.4",
-    "positive-tool~=0.6.0",
-    "typer~=0.20.1",
-]
+dependencies = ["cryptography~=46.0.4", "positive-tool~=0.6.0", "typer~=0.20.1"]
 
 [project.optional-dependencies]
 tui = ["rich>=14.2.0"]
 gui = ["pyside6>=6.10.1"]
 build = ["pyinstaller>=6.17.0"]
+check = ["mypy>=1.19.1", "ruff>=0.14.14", "ty>=0.0.14"]
 
 [project.urls]
 Homepage = "https://github.com/TW0hank0/positive_password_book/"

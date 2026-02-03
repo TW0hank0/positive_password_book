@@ -29,5 +29,8 @@
     "basedpyright.analysis.autoSearchPaths": true,
     "editor.cursorStyle": "line",
     "editor.overtypeCursorStyle": "block",
-    "python.REPL.enableREPLSmartSend": false
+    "python.REPL.enableREPLSmartSend": false,
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml"
+    }
 }
