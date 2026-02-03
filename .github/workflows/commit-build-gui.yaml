@@ -260,7 +260,7 @@ jobs:
           echo '--------'
           ls -la artifacts
 
-      - name: Create Prerelease via GitHub CLI
+      - name: Prerelease
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

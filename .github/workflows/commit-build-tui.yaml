@@ -274,7 +274,7 @@ jobs:
       #       > UTC時間：臺北時間-8
       #       - github_sha： ${{ github.sha }}
 
-      - name: Create Prerelease via GitHub CLI
+      - name: Prerelease
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
