@@ -5,7 +5,7 @@ a = Analysis(
     ['launch.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('pyproject.toml', '.'), ('LICENSE', '.'), ('icon.png', '.'), ('assets', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
