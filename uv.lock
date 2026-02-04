@@ -338,16 +338,18 @@ version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "cryptography" },
-    { name = "mypy" },
     { name = "positive-tool" },
-    { name = "ruff" },
-    { name = "ty" },
     { name = "typer" },
 ]
 
 [package.optional-dependencies]
 build = [
     { name = "pyinstaller" },
+]
+check = [
+    { name = "mypy" },
+    { name = "ruff" },
+    { name = "ty" },
 ]
 gui = [
     { name = "pyside6" },
@@ -358,17 +360,17 @@ tui = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cryptography", specifier = ">=46.0.4" },
-    { name = "mypy", specifier = ">=1.19.1" },
+    { name = "cryptography", specifier = "~=46.0.4" },
+    { name = "mypy", marker = "extra == 'check'", specifier = ">=1.19.1" },
     { name = "positive-tool", specifier = "~=0.6.0" },
     { name = "pyinstaller", marker = "extra == 'build'", specifier = ">=6.17.0" },
     { name = "pyside6", marker = "extra == 'gui'", specifier = ">=6.10.1" },
     { name = "rich", marker = "extra == 'tui'", specifier = ">=14.2.0" },
-    { name = "ruff", specifier = ">=0.14.14" },
-    { name = "ty", specifier = ">=0.0.14" },
+    { name = "ruff", marker = "extra == 'check'", specifier = ">=0.14.14" },
+    { name = "ty", marker = "extra == 'check'", specifier = ">=0.0.14" },
     { name = "typer", specifier = "~=0.20.1" },
 ]
-provides-extras = ["tui", "gui", "build"]
+provides-extras = ["tui", "gui", "build", "check"]
 
 [[package]]
 name = "positive-tool"
