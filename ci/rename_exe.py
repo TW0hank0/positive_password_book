@@ -42,7 +42,7 @@ def main():
             )
         )
         ver = d["project"]["version"]
-    if platform.platform() == "Linux":
+    if os.name == "posix":
         sys_platform = "linux"
     else:
         sys_platform = "windows"
