@@ -16,7 +16,7 @@ def main():
             )
         ):
             if i.startswith("ppb") or i.startswith(
-                "positive_password_boook"
+                "positive_password_book"
             ):
                 orig = os.path.abspath(
                     os.path.join(
