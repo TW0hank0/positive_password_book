@@ -15,7 +15,9 @@ def main():
                 "dist",
             )
         ):
-            if i.startswith("ppb"):
+            if i.startswith("ppb") or i.startswith(
+                "positive_password_boook"
+            ):
                 orig = os.path.abspath(
                     os.path.join(
                         os.path.dirname(__file__), "..", "dist", i
