@@ -43,14 +43,18 @@ def main():
     root, ext = os.path.splitext(os.path.basename(orig))
     if ext == "" or ext is None:
         if "--pre" in sys.argv:
-            new_name = f"{root}_{pyver}_pre-{ver}.bin"
+            new_name = (
+                f"{root}_{pyver}_pre-{ver}_{platform.platform()}.bin"
+            )
         else:
-            new_name = f"{root}_{pyver}_{ver}.bin"
+            new_name = f"{root}_{pyver}_{ver}_{platform.platform()}.bin"
     else:
         if "--pre" in sys.argv:
-            new_name = f"{root}_{pyver}_pre-{ver}{ext}"
+            new_name = (
+                f"{root}_{pyver}_pre-{ver}_{platform.platform()}{ext}"
+            )
         else:
-            new_name = f"{root}_{pyver}_{ver}{ext}"
+            new_name = f"{root}_{pyver}_{ver}_{platform.platform()}{ext}"
     if platform.platform() == "Linux":
         new_name = f"{new_name}.bin"
     new_path = os.path.join(os.path.dirname(orig), new_name)
