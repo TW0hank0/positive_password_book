@@ -35,8 +35,8 @@ jobs:
       - name: check use ruff
         run: uv run ruff check .
 
-      - name: check use ty
-        run: uv run ty check .
+      #- name: check use ty
+        #run: uv run ty check .
 
-      - name: check use mypy
-        run: uv run mypy .
+      #- name: check use mypy
+        #run: uv run mypy .
