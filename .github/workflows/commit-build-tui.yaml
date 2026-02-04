@@ -9,6 +9,7 @@ on:
       - 'README.md'
       - 'READMEs/**'
       - '.vscode/**'
+      - 'TODO.md'
 
 jobs:
   build_exec:

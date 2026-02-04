@@ -12,7 +12,7 @@
 - [ ] 新增測試
 - [ ] 支持使用者設定
 - [ ] 編輯已創建的帳號
-- [ ] CI支援GUI/TUI/CLI/FUll(GUI+TUI+CLI)4個版本
+- [ ] Github Workflow支援GUI/TUI/CLI/FUll(GUI+TUI+CLI)4個版本
 - [ ] 加密
 
 **未來計畫**

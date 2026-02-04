@@ -40,21 +40,21 @@ def main():
             )
         )
         ver = d["project"]["version"]
+    if platform.platform() == "Linux":
+        sys_platform = "linux"
+    else:
+        sys_platform = "windows"
     root, ext = os.path.splitext(os.path.basename(orig))
     if ext == "" or ext is None:
         if "--pre" in sys.argv:
-            new_name = (
-                f"{root}_{pyver}_pre-{ver}_{platform.platform()}.bin"
-            )
+            new_name = f"{root}_{pyver}_pre-{ver}_{sys_platform}.bin"
         else:
-            new_name = f"{root}_{pyver}_{ver}_{platform.platform()}.bin"
+            new_name = f"{root}_{pyver}_{ver}_{sys_platform}.bin"
     else:
         if "--pre" in sys.argv:
-            new_name = (
-                f"{root}_{pyver}_pre-{ver}_{platform.platform()}{ext}"
-            )
+            new_name = f"{root}_{pyver}_pre-{ver}_{sys_platform}{ext}"
         else:
-            new_name = f"{root}_{pyver}_{ver}_{platform.platform()}{ext}"
+            new_name = f"{root}_{pyver}_{ver}_{sys_platform}{ext}"
     if platform.platform() == "Linux":
         new_name = f"{new_name}.bin"
     new_path = os.path.join(os.path.dirname(orig), new_name)
