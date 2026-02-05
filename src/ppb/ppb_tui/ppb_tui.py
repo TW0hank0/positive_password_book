@@ -8,7 +8,8 @@ from typing import Literal, Any
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
+
+# from rich.table import Table
 from rich.style import Style
 from rich.text import Text
 from rich.prompt import Prompt, PromptBase, Confirm
@@ -243,6 +244,26 @@ class PPBTUIDataBackend:
         else:
             self.logger.error("save error")
 
+    def get_data(self):
+        if self.backend is not None:
+            return self.backend.password_book_get_data()
+        else:
+            self.logger.error("資料回傳錯誤！")
+            return {}
+
+    def insert_data(
+        self,
+        app: str,
+        acc: str,
+        pwd: str,
+        usernote: str = "",
+        note: str = "",
+    ):
+        if self.backend is not None:
+            self.backend.password_book_insert(
+                app, acc, pwd, note=note, user_note=usernote
+            )
+
 
 class PasswordBook:
     def __init__(self, logger: logging.Logger, version) -> None:
@@ -299,96 +320,12 @@ class PasswordBook:
         #     self.colors[i] = tmp_color
 
     def get_backend_data(self):
-        # if self.data is None:
-        # self.backend.password_book_new()
-        self.data = self.backend.password_book_get_data()
+        # self.data = self.backend.password_book_get_data()
+        self.data = self.data_backend.get_data()
         self.refresh_page()
 
     def backend_save_data(self):
         self.backend.password_book_save(self.data_file_path)
-
-    def print_data_old(self):
-        #
-        # self.console.clear()
-        # if self.data is None:
-        # self.get_backend_data()
-        # if hasattr(self, "pages") is False:
-        # self.refresh_page()
-        #
-        self.logger.debug(f"所有分頁： {self.pages}")
-        self.logger.debug(f"資料： {self.data}")
-        self.logger.debug(f"總頁數： {self.page_max_num}")
-        #
-        table = Table()
-        header_style = Style(color="blue")
-        table.add_column(
-            "應用程式", min_width=10, header_style=header_style
-        )
-        table.add_column("帳號", min_width=20, header_style=header_style)
-        table.add_column("密碼", min_width=20, header_style=header_style)
-        table.add_column(
-            "user_note", header_style=header_style, min_width=10
-        )
-        table.add_column("note", header_style=header_style, min_width=10)
-        if len(self.pages) > 0 and self.page_max_num > 0:
-            for app, app_data in self.pages[self.page_num - 1]:
-                self.logger.debug(f"app:{app}, app_data:{app_data}")
-                if app == "trash_can":
-                    continue
-                else:
-                    table.add_row(app, app_data["acc"], app_data["pwd"])
-        layout = Layout()
-        layout.add_split(Layout(table))
-        # layout.add_split(Layout(Text(f"第{self.page_num}頁，共{self.page_max_num}頁")))
-        page_info = Text(
-            f"第{self.page_num}頁，共{self.page_max_num}頁",
-            style="",
-            end="",
-        )
-        version_text = f"版本： {self.version}"
-        version_info = Text(
-            (
-                " "
-                * (
-                    int(
-                        (
-                            self.console.size.width
-                            - 4
-                            - (len(str(page_info)) + 5)
-                            - (len(version_text) + 3)
-                        )
-                        / 2
-                    )
-                    - int((len(version_text) + 3) / 2)
-                )
-            )
-            + version_text
-        )
-        info_rule = Rule(style=Style(color="green", dim=True))
-        infos = Renderables([page_info, version_info])
-        content = Renderables([infos, info_rule, table])
-        # 建立內容組合
-        # content = Renderables(
-        # [table, Align(page_info, align="right", vertical="bottom")]
-        # )
-        # self.console.print(
-        # Panel(
-        # layout,
-        # title=Text(PROJECT_NAME, style=Style(color="purple", bold=True)),
-        # height=self.console.size.height - 3,
-        # )
-        # )
-        # self.console.print(Text(f"第{self.page_num}頁，共{self.page_max_num}頁"))
-        self.console.print(
-            Panel(
-                content,
-                title=Text(
-                    project_name,
-                    style=Style(color="purple", bold=True),
-                ),
-                height=self.console.size.height - 3,
-            )
-        )
 
     def print_data(self, clear_scrren: bool = False):
         self.logger.debug(f"所有分頁： {self.pages}")
@@ -518,10 +455,10 @@ class PasswordBook:
         app_name = Prompt.ask("應用程式")
         acc = Prompt.ask("帳號")
         pwd = Prompt.ask("密碼")
-        usernote = Prompt.ask("筆記(usernote)：")
+        usernote = Prompt.ask("筆記(usernote)")
         #
-        key_style = Style(color="blue")
-        value_style = Style(color="yellow")
+        key_style = Style(color="bright_blue")
+        value_style = Style(color="bright_yellow")
         tree = Tree(app_name, style=key_style)
         tree.add("帳號：", style=key_style).add(acc, style=value_style)
         tree.add("密碼：", style=key_style).add(pwd, style=value_style)
@@ -532,6 +469,9 @@ class PasswordBook:
         if Confirm.ask("是否正確： ", console=self.console) is True:
             self.backend.password_book_insert(
                 app_name, acc, pwd, user_note=usernote
+            )
+            self.data_backend.insert_data(
+                app_name, acc, pwd, usernote=usernote
             )
             self.logger.info(
                 f"新增：應用程式「{app_name}」、帳號「{acc}」、密碼「{pwd}」、筆記「{usernote}」。"

@@ -4,6 +4,7 @@
 
 **目前計劃**
 - 完成加密功能
+- TUI更換：self.backend -> self.data_backend
 
 **1.0.0**
 - [ ] 完成GUI
