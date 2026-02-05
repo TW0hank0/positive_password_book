@@ -61,7 +61,7 @@ def main():
         new_name = f"{new_name}.bin"
     new_path = os.path.join(os.path.dirname(orig), new_name)
     os.rename(orig, new_path)
-    print(new_path)
+    print(os.path.basename(new_path))
 
 
 if __name__ == "__main__":
