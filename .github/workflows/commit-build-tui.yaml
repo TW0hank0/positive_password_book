@@ -151,14 +151,15 @@ jobs:
         uses: actions/upload-artifact@v4
         if: runner.os == 'Windows'
         with:
+          name: ${{ steps.rename_exe_windows.outputs.exe_path }}
           path: dist/*
 
       - name: Upload exe artifact (Linux)
         uses: actions/upload-artifact@v4
         if: runner.os == 'Linux'
         with:
-          name: ppb_tui
-          path: dist/*
+          name: ${{ steps.rename_exe_linux.outputs.exe_path }}
+          path: dist/
 
       # - name: Get datetime (Linux)
       #   id: get_datetime_linux
