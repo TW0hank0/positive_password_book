@@ -151,14 +151,12 @@ jobs:
         uses: actions/upload-artifact@v4
         if: runner.os == 'Windows'
         with:
-          name: ppb_tui_${{ matrix.python }}.exe
           path: dist/*
 
       - name: Upload exe artifact (Linux)
         uses: actions/upload-artifact@v4
         if: runner.os == 'Linux'
         with:
-          name: ppb_tui_${{ matrix.python }}
           path: dist/*
 
       # - name: Get datetime (Linux)
