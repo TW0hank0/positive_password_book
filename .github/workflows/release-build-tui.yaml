@@ -88,6 +88,8 @@ jobs:
           ls -la dist || true
           echo '---'
           ls
+          echo "----dist/----"
+          ls dist
 
       - name: Rename exe to include version (Linux)
         id: rename_exe_linux
@@ -119,14 +121,12 @@ jobs:
         if: runner.os == 'Windows'
         with:
           path: dist
-          name: ppb*
 
       - name: Upload exe artifact (Linux)
         uses: actions/upload-artifact@v4
         if: runner.os == 'Linux'
         with:
           path: dist
-          name: ppb*
 
   upload:
     needs: build
