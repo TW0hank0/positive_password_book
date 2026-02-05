@@ -148,14 +148,14 @@ jobs:
           cd ..
 
       - name: Upload exe artifact (Windows)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: runner.os == 'Windows'
         with:
           name: ${{ steps.rename_exe_windows.outputs.exe_path }}
           path: dist/*
 
       - name: Upload exe artifact (Linux)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: runner.os == 'Linux'
         with:
           name: ${{ steps.rename_exe_linux.outputs.exe_path }}
