@@ -2,7 +2,7 @@ import json
 import secrets
 import base64
 
-from typing import Literal, Union, Optional
+from typing import Literal, Self, Union, Optional
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -41,13 +41,15 @@ file_content_type = dict[
 class PasswordBookSystem:
     _data: data_type
 
-    @ArgType.auto()
     def __init__(
         self,
         data: data_type,
         is_encrypt: bool = False,
         encrypt_password: str | None = None,
     ) -> None:
+        ArgType("data", data, [dict])
+        ArgType("is_encrypt", is_encrypt, [bool])
+        ArgType("encrypt_password", encrypt_password, [str, None])
         self._data = data
         self._is_encrypt: bool = is_encrypt
         self._encrypt_password: str | None = encrypt_password
@@ -55,11 +57,11 @@ class PasswordBookSystem:
     @classmethod
     def password_book_new(
         cls, is_encrypt: bool = False, encrypt_password: str | None = None
-    ):
-        cls({"trash_can": []}, is_encrypt, encrypt_password)
+    ) -> Self:
+        return cls({"trash_can": []}, is_encrypt, encrypt_password)
 
     @classmethod
-    def password_book_load(cls, file_path: str):
+    def password_book_load(cls, file_path: str) -> Self:
         ArgType("file_path", file_path, str, is_exists=True, is_file=True)
         #
         with open(file_path, "r", encoding="utf-8") as f:
@@ -67,7 +69,7 @@ class PasswordBookSystem:
         if type(file_data) is not dict:
             raise error_backend.FileContentError("資料類型錯誤！")
         else:
-            cls(file_data)
+            return cls(file_data)
 
     @classmethod
     def load_encrypt(cls, file_path: str, encrypt_password: str):
@@ -84,7 +86,7 @@ class PasswordBookSystem:
                 encrypt_password,
             )
             if type(data_bytes) is bytes:
-                cls(
+                return cls(
                     json.loads(data_bytes.decode("utf-8")),
                     is_encrypt=True,
                     encrypt_password=encrypt_password,

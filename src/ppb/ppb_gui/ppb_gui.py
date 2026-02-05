@@ -124,7 +124,10 @@ class CustomTitleBar(QWidget):
             event.accept()
 
     def mouseMoveEvent(self, event: QMouseEvent):
-        if event.buttons() == Qt.MouseButton.LeftButton and self.drag_position:
+        if (
+            event.buttons() == Qt.MouseButton.LeftButton
+            and self.drag_position
+        ):
             self.parent_obj.move(
                 event.globalPosition().toPoint() - self.drag_position
             )
@@ -156,7 +159,9 @@ class PasswordBookGui(QMainWindow):
         self.config_path = os.path.join(
             project_infos["project_path"], "password_data.json"
         )
-        self.backend = ppb_backend.PasswordBookSystem(self.config_path)
+        self.backend = ppb_backend.PasswordBookSystem.password_book_load(
+            self.config_path
+        )
         self.backend.password_book_load(self.config_path)
         self.data: ppb_backend.data_type = {}
         self.data_widgets: list[QWidget] = []  # widgets清單
@@ -208,7 +213,7 @@ class PasswordBookGui(QMainWindow):
         project_name_text.setAlignment(
             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft
         )
-        version_text = QLabel(f"<font size='2'>版本：{version}</font>")
+        version_text = QLabel(f"<font size='1'>版本：{version}</font>")
         version_text.setAlignment(
             Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft
         )
@@ -234,7 +239,7 @@ class PasswordBookGui(QMainWindow):
         # 設定ScrollArea背景顏色
         scroll_palette = self.scroll_area.palette()
         scroll_palette.setColor(
-            QPalette.ColorRole.Window, QColor("#f0f0f0")
+            QPalette.ColorRole.Window, QColor("rgb(50, 50, 50)")
         )  # 設定背景色
         self.scroll_area.setPalette(scroll_palette)
         self.scroll_area.setAutoFillBackground(True)
@@ -309,7 +314,9 @@ class PasswordBookGui(QMainWindow):
 
         self.logger.info("資料重新整理完成")
 
-    def _create_app_row(self, app_name: str, acc: str, pwd: str) -> QWidget:
+    def _create_app_row(
+        self, app_name: str, acc: str, pwd: str
+    ) -> QWidget:
         """建立單一應用程式資料列"""
         row_widget = QWidget()
         row_layout = QHBoxLayout()

@@ -19,7 +19,7 @@ from rich.containers import Renderables
 
 
 from positive_tool import pt
-from positive_tool.arg import ArgType
+from positive_tool.verify import ArgType
 
 from ..ppb_backend import ppb_backend
 from ...ppb.project_infos import project_infos
@@ -187,7 +187,7 @@ class PasswordBook:
         self.ppb_tui_log_handler = PPBLogHandler(console=self.console)
         self.logger.addHandler(self.ppb_tui_log_handler)
         self.version = version
-        self.backend = ppb_backend.PasswordBookSystem()
+        self.backend = ppb_backend.PasswordBookSystem.password_book_new()
         self.data: ppb_backend.data_type = {}
         self.pages: list = []
         self.data_file_path: str = os.path.abspath(
