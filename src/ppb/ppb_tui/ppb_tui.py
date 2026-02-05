@@ -23,6 +23,7 @@ from positive_tool.verify import ArgType
 
 from ..ppb_backend import ppb_backend
 from ...ppb.project_infos import project_infos
+from ..ppb_errors import error_backend
 
 project_name: str = project_infos["project_name"]
 license_file_path = project_infos["project_license_file_path"]
@@ -180,6 +181,69 @@ class PPBSetting:  # TODO: 待轉成GUI、TUI通用，移到ppb_backend
             sys.exit(1)
 
 
+class PPBTUIDataBackend:
+    def __init__(self, file_path: str, logger: logging.Logger) -> None:
+        self.file_path = file_path
+        self.logger = logger
+        if os.path.exists(file_path) is True:
+            if ppb_backend.get_is_file_encrypt(file_path) is False:
+                self.backend = (
+                    ppb_backend.PasswordBookSystem.password_book_load(
+                        file_path
+                    )
+                )
+                self.is_encrypt = False
+            else:
+                self.console = Console()
+                while True:
+                    encrypt_password = Prompt.ask(
+                        "(不顯示) (quit退出)請輸入密碼：", password=True
+                    )
+                    if encrypt_password in ["quit", "退出"]:
+                        sys.exit()
+                    else:
+                        try:
+                            self.backend = ppb_backend.PasswordBookSystem.load_encrypt(
+                                file_path, encrypt_password
+                            )
+                        except error_backend.BackendWrongPassword:
+                            msg = "密碼錯誤！"
+                            self.logger.warning(msg)
+                            self.console.print(f"[yelow]{msg}[/yellow]")
+                        else:
+                            if (
+                                type(self.backend)
+                                is ppb_backend.PasswordBookSystem
+                            ):
+                                self.encrypt_password = encrypt_password
+                                self.is_encrypt = True
+                                break
+                            else:
+                                msg = "資料回傳錯誤！"
+                                self.logger.warning(msg)
+                                self.console.print(
+                                    f"[yellow]{msg}[/yellow]"
+                                )
+        else:
+            self.backend = (
+                ppb_backend.PasswordBookSystem.password_book_new()
+            )
+
+    def save_encrypt(self):
+        if self.backend is not None:
+            self.backend.save_encrypt(
+                self.file_path, self.encrypt_password
+            )
+        else:
+            self.logger.error("save error")
+
+    def save_to_encrypt(self, encrypt_password: str):
+        if self.backend is not None:
+            self.backend.save_encrypt(self.file_path, encrypt_password)
+        else:
+            self.logger.error("save error")
+
+
 class PasswordBook:
     def __init__(self, logger: logging.Logger, version) -> None:
         self.console = Console()
@@ -187,12 +251,17 @@ class PasswordBook:
         self.ppb_tui_log_handler = PPBLogHandler(console=self.console)
         self.logger.addHandler(self.ppb_tui_log_handler)
         self.version = version
-        self.backend = ppb_backend.PasswordBookSystem.password_book_new()
-        self.data: ppb_backend.data_type = {}
-        self.pages: list = []
         self.data_file_path: str = os.path.abspath(
             os.path.join(project_path, "password_data.json")
         )
+        self.data_backend = PPBTUIDataBackend(
+            self.data_file_path, self.logger
+        )
+        self.backend: ppb_backend.PasswordBookSystem = (
+            ppb_backend.PasswordBookSystem.password_book_new()
+        )
+        self.data: ppb_backend.data_type = {}
+        self.pages: list = []
         if os.path.isfile(self.data_file_path) is True:
             try:
                 self.backend.password_book_load(self.data_file_path)

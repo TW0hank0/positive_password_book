@@ -35,9 +35,5 @@ uv sync --extra tui
 uv run launch_tui.py
 ```
 
-## 計畫
-
-見[TODO.md](TODO.md)
-
 ## 協議
 請遵守[AGPL-3.0協議](https://www.gnu.org/licenses/agpl-3.0.en.html)

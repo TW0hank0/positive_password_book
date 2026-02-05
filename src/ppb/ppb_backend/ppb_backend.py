@@ -33,7 +33,7 @@ data_type = dict[
 ]
 
 file_content_type = dict[
-    Literal["is_encrypt", "data", "encrypt_data"],
+    Literal["is_encrypt", "data", "encrypt_data", "encrypt_test"],
     Union[bool, data_type, str],
 ]
 
@@ -94,6 +94,7 @@ class PasswordBookSystem:
         else:
             pass
             # TODO
+            raise error_backend.BackendEncryptError("error")
 
     def password_book_save(self, file_path: str):
         if self._data is None:
@@ -118,9 +119,16 @@ class PasswordBookSystem:
                     encrypt_password,
                 )
             ).decode("utf-8")
+            encrypt_test = base64.b64encode(
+                self.encrypt_data(
+                    json.dumps("encrypt_test").encode("utf-8"),
+                    encrypt_password,
+                )
+            ).decode("utf-8")
             file_data: file_content_type = {
                 "is_encrypt": True,
                 "encrypt_data": encrypt_data,
+                "encrypt_test": encrypt_test,
             }
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(
@@ -240,13 +248,6 @@ class PasswordBookSystem:
         # 回傳
         return salt + nonce + ciphertext
 
-    def get_is_file_encrypt(self, filepath: str):
-        ArgType("filepath", filepath, str, is_exists=True, is_file=True)
-        #
-        with open(filepath, "r", encoding="utf-8") as f:
-            file_data: file_content_type = json.load(f)
-        return file_data.get("is_encrypt", False)
-
     def get_is_encrypt(self):
         return self._is_encrypt
 
@@ -286,3 +287,11 @@ def decrypt_data(encrypted_data: bytes, password: str) -> Optional[bytes]:
             raise error_backend.BackendEncryptError(
                 e
             )  # 密鑰錯誤、nonce 錯誤、或資料被竄改
+
+
+def get_is_file_encrypt(filepath: str):
+    ArgType("filepath", filepath, str, is_exists=True, is_file=True)
+    #
+    with open(filepath, "r", encoding="utf-8") as f:
+        file_data: file_content_type = json.load(f)
+    return file_data.get("is_encrypt", False)
