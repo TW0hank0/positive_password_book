@@ -273,9 +273,9 @@ jobs:
             - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}
             - github_sha： ${{ github.sha }}" \
             --prerelease \
-            --repo="${{ github.repository }}"
-            ```
-            ${{ github.event.head_commit.message }}
+            --repo="${{ github.repository }}" \
+            ``` \
+            ${{ github.event.head_commit.message }} \
             ```
           echo '----Get Upload Url----'
           upload_url_base=$(gh api \
