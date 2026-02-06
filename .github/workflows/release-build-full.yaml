@@ -119,7 +119,7 @@ jobs:
         if: runner.os == 'Windows'
         with:
           name: ${{ steps.rename_exe_windows.outputs.exe_path }}
-          path: dist/
+          path: dist/*
 
       - name: Upload exe artifact (Linux)
         uses: actions/upload-artifact@v6

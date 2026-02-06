@@ -230,17 +230,26 @@ class PPBTUIDataBackend:
                 ppb_backend.PasswordBookSystem.password_book_new()
             )
 
-    def save_encrypt(self):
+    def save(self):
         if self.backend is not None:
-            self.backend.save_encrypt(
-                self.file_path, self.encrypt_password
-            )
+            if self.is_encrypt is True:
+                self.backend.save_encrypt(
+                    self.file_path, self.encrypt_password
+                )
+            else:
+                self.backend.password_book_save(self.file_path)
         else:
             self.logger.error("save error")
 
     def save_to_encrypt(self, encrypt_password: str):
         if self.backend is not None:
             self.backend.save_encrypt(self.file_path, encrypt_password)
+        else:
+            self.logger.error("save error")
+
+    def save_to_no_encrypt(self):
+        if self.backend is not None:
+            self.backend.password_book_save(self.file_path)
         else:
             self.logger.error("save error")
 
@@ -263,6 +272,14 @@ class PPBTUIDataBackend:
             self.backend.password_book_insert(
                 app, acc, pwd, note=note, user_note=usernote
             )
+        else:
+            self.logger.error("insert error")
+
+    def delete_data(self, app, acc):
+        if self.backend is not None:
+            self.backend.password_book_delete(app, acc)
+        else:
+            self.logger.error("delete error")
 
 
 class PasswordBook:
@@ -278,20 +295,20 @@ class PasswordBook:
         self.data_backend = PPBTUIDataBackend(
             self.data_file_path, self.logger
         )
-        self.backend: ppb_backend.PasswordBookSystem = (
-            ppb_backend.PasswordBookSystem.password_book_new()
-        )
+        # self.backend: ppb_backend.PasswordBookSystem = (
+        #     ppb_backend.PasswordBookSystem.password_book_new()
+        # )
         self.data: ppb_backend.data_type = {}
         self.pages: list = []
-        if os.path.isfile(self.data_file_path) is True:
-            try:
-                self.backend.password_book_load(self.data_file_path)
-            except json.JSONDecodeError:
-                self.console.print("檔案格式錯誤！")
-                self.console.print_exception(show_locals=True)
-                sys.exit(1)
-        else:
-            self.backend.password_book_new()
+        # if os.path.isfile(self.data_file_path) is True:
+        #     try:
+        #         self.backend.password_book_load(self.data_file_path)
+        #     except json.JSONDecodeError:
+        #         self.console.print("檔案格式錯誤！")
+        #         self.console.print_exception(show_locals=True)
+        #         sys.exit(1)
+        # else:
+        #     self.backend.password_book_new()
         # self.setting = {}
         # self.setting_init_dict = {}
         self.setting_file_path = os.path.abspath(
@@ -325,7 +342,8 @@ class PasswordBook:
         self.refresh_page()
 
     def backend_save_data(self):
-        self.backend.password_book_save(self.data_file_path)
+        # self.backend.password_book_save(self.data_file_path)
+        self.data_backend.save()
 
     def print_data(self, clear_scrren: bool = False):
         self.logger.debug(f"所有分頁： {self.pages}")
@@ -467,8 +485,8 @@ class PasswordBook:
         )
         self.console.print(tree)
         if Confirm.ask("是否正確： ", console=self.console) is True:
-            self.backend.password_book_insert(
-                app_name, acc, pwd, user_note=usernote
+            self.data_backend.insert_data(
+                app_name, acc, pwd, usernote=usernote
             )
             self.data_backend.insert_data(
                 app_name, acc, pwd, usernote=usernote
@@ -541,7 +559,7 @@ class PasswordBook:
                 break
         self.console.print(self.acc_tree(app, acc))
         if Confirm.ask("是否要刪除？") is True:
-            self.backend.password_book_delete(app, acc)
+            self.data_backend.delete_data(app, acc)
             self.get_backend_data()
             self.logger.info(f"已刪除應用程式「{app}」的帳號「{acc}」。")
             self.console.print("已完成刪除。")
@@ -767,26 +785,28 @@ class PasswordBook:
         self.close()
 
     def __str__(self) -> str:
-        return f"""PasswordBook(
-    pages={self.pages},
-    page_num={self.page_num},
-    page_max_num={self.page_max_num},
-    content_per_page={self.content_per_page},
-    data={self.data},
-    data_file_path={self.data_file_path},
-    backend={self.backend}
-)"""
+        return f"""
+PasswordBook
+    .pages={self.pages},
+    .page_num={self.page_num},
+    .page_max_num={self.page_max_num},
+    .content_per_page={self.content_per_page},
+    .data={self.data},
+    .data_file_path={self.data_file_path},
+    .data_backend={self.data_backend}
+"""
 
     def __repr__(self) -> str:
-        return f"""PasswordBook(
-    pages={self.pages},
-    page_num={self.page_num},
-    page_max_num={self.page_max_num},
-    content_per_page={self.content_per_page},
-    data={self.data},
-    data_file_path={self.data_file_path},
-    backend={self.backend}
-)"""
+        return f"""
+PasswordBook
+    .pages={self.pages},
+    .page_num={self.page_num},
+    .page_max_num={self.page_max_num},
+    .content_per_page={self.content_per_page},
+    .data={self.data},
+    .data_file_path={self.data_file_path},
+    .data_backend={self.data_backend}
+"""
 
 
 def main(logger, version):
