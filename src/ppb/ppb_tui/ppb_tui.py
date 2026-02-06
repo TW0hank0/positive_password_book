@@ -4,7 +4,7 @@ import os
 import sys
 import logging
 
-from typing import Literal, Any
+from typing import Callable, Literal, Any, Union
 
 from rich.console import Console
 from rich.panel import Panel
@@ -703,30 +703,85 @@ class PasswordBook:
             "\n" * self.console.size.height
         )  # 防止覆蓋之前的內容
         is_user_input_error = False
-        actions = [
-            "新增",
-            "add",
-            "a",
-            "刪除",
-            "delete",
-            "d",
-            "離開",
-            "quit",
-            "q",
-            "重新整理",
-            "refresh",
-            "r",
-            "關於",
-            "about",
-            "下一頁",
-            "next",
-            "n",
-            "上一頁",
-            "last",
-            "l",
-            "儲存",
-            "save",
-        ]
+        # old_actions = [
+        #     "新增",
+        #     "add",
+        #     "a",
+        #     "刪除",
+        #     "delete",
+        #     "d",
+        #     "離開",
+        #     "quit",
+        #     "q",
+        #     "重新整理",
+        #     "refresh",
+        #     "r",
+        #     "關於",
+        #     "about",
+        #     "下一頁",
+        #     "next",
+        #     "n",
+        #     "上一頁",
+        #     "last",
+        #     "l",
+        #     "儲存",
+        #     "save",
+        # ]
+        actions: dict[
+            str,
+            dict[
+                Union[str, Literal["alias", "call"]],
+                Union[list[str], Callable],
+            ],
+        ] = {
+            "新增": {"alias": ["add", "a"], "call": self.insert_appdata},
+            "刪除": {
+                "alias": [
+                    "delete",
+                    "d",
+                ],
+                "call": self.delete_appdata,
+            },
+            "離開": {
+                "alias": [
+                    "quit",
+                    "q",
+                ]
+            },
+            "重新整理": {
+                "alias": [
+                    "refresh",
+                    "r",
+                ]
+            },
+            "關於": {
+                "alias": [
+                    "about",
+                ]
+            },
+            "下一頁": {
+                "alias": [
+                    "next",
+                    "n",
+                ]
+            },
+            "上一頁": {
+                "alias": [
+                    "last",
+                    "l",
+                ]
+            },
+            "儲存": {
+                "alias": [
+                    "save",
+                ]
+            },
+        }
+        all_actions = []
+        for action in actions:
+            all_actions.append(action)
+            # TODO:remove ignore
+            all_actions.extend(actions[action]["alias"])  # pyright: ignore[reportArgumentType]
         self.console.clear()
         while True:
             while True:
@@ -741,7 +796,7 @@ class PasswordBook:
                     )
                     is_user_input_error = False
                 prompt = Text("輸入動作") + Text(
-                    "〔新增, 刪除, 離開, 重新整理, 關於, 下一頁, 上一頁, 儲存〕",
+                    f"〔{', '.join(actions.keys())}〕",
                     style=Style(color="bright_magenta"),
                 )
                 try:
@@ -755,10 +810,22 @@ class PasswordBook:
                     self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
                 else:
                     break
-            if user_action not in actions:
+            if user_action not in all_actions:
                 is_user_input_error = True
                 self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
             else:
+                if user_action in ["離開", "quit", "q"]:
+                    break
+                else:
+                    for action in actions:
+                        if (
+                            user_action == action
+                            or user_action in actions[action]["alias"]  # pyright: ignore[reportOperatorIssue]
+                        ):
+                            call = actions[action]["call"]
+                            if isinstance(call, Callable):
+                                call()
+                #TODO:finish it
                 if user_action in ["新增", "add", "a"]:
                     self.insert_appdata()
                 elif user_action in ["刪除", "delete", "d"]:
