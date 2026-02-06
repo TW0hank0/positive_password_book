@@ -198,7 +198,7 @@ class PPBTUIDataBackend:
                 self.console = Console()
                 while True:
                     encrypt_password = Prompt.ask(
-                        "(不顯示) (quit退出)請輸入密碼：", password=True
+                        "(quit退出) (不顯示) 請輸入密碼", password=True
                     )
                     if encrypt_password in ["quit", "退出"]:
                         sys.exit()
@@ -698,6 +698,25 @@ class PasswordBook:
         else:
             self.logger.warning("已是第一頁！")
 
+    def advance_save(self):
+        options = ["不加密儲存", "加密儲存"]
+        for option in options:
+            self.console.print(f"． {option}")
+        user_option = Prompt.ask("選擇一種儲存方式", choices=options)
+        if user_option == "不加密儲存":
+            self.data_backend.save_to_no_encrypt()
+            self.data_backend.is_encrypt = False
+        elif user_option == "加密儲存":
+            encrypt_password = Prompt.ask("加密密碼")
+            retype_encrypt_password = Prompt.ask("再次輸入加密密碼")
+            if encrypt_password == retype_encrypt_password:
+                self.data_backend.save_to_encrypt(encrypt_password)
+                self.data_backend.is_encrypt = True
+                self.data_backend.encrypt_password = encrypt_password
+                self.logger.info("已加密儲存！")
+            else:
+                self.logger.info("密碼輸入錯誤：第1/2次輸入不同！")
+
     def main(self):
         self.console.print(
             "\n" * self.console.size.height
@@ -781,6 +800,10 @@ class PasswordBook:
                 ],
                 "call": self._main_save,
             },
+            "進階儲存": {
+                "alias": ["advance-save", "asave"],
+                "call": self.advance_save,
+            },
         }
         all_actions = []
         for action in actions:
@@ -840,29 +863,6 @@ class PasswordBook:
                         self.logger.warning(
                             "輸入錯誤：請選擇一個有效的動作！"
                         )
-                # if user_action in ["新增", "add", "a"]:
-                #     self.insert_appdata()
-                # elif user_action in ["刪除", "delete", "d"]:
-                #     self.delete_appdata()
-                # elif user_action in ["離開", "quit", "q"]:
-                #     break
-                # elif user_action in ["重新整理", "refresh", "r"]:
-                #     self.get_backend_data()
-                #     self.refresh_page()
-                # elif user_action in ["關於", "about"]:
-                #     self.about_page()
-                # elif user_action in ["下一頁", "next", "n"]:
-                #     self.next_page()
-                # elif user_action in ["上一頁", "last", "l"]:
-                #     self.last_page()
-                # elif user_action in ["儲存", "save"]:
-                #     self.backend_save_data()
-                #     self.logger.info(
-                #         f"已儲存到檔案：「{self.data_file_path}」"
-                #     )
-                # else:
-                #     is_user_input_error = True
-                #     self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
         self.close()
 
     def _main_refresh(self):
@@ -916,8 +916,6 @@ def main(logger, version):
 
 
 def launcher():
-    # TODO:待改成ppb_launcher或launch_tui統一啟動
-    import os
     import datetime
 
     log_dir = os.path.join(project_path, ".logs")
