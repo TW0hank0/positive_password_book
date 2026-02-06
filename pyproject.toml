@@ -2,7 +2,7 @@
 name = "positive-password-book"
 version = "0.4.1"
 license = "AGPL-3.0-only"
-description = "一個密碼本"
+description = ""
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["cryptography~=46.0.4", "positive-tool~=0.6.0", "typer~=0.20.1"]
@@ -55,9 +55,6 @@ exclude = [
     "site-packages",
     "change_log",
     ".logs",
-    ".godot",
-    "exports",
-    "addons",
     "fonts",
 ]
 line-length = 75

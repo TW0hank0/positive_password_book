@@ -455,7 +455,7 @@ class PasswordBook:
 
     def close(self):
         self.backend_save_data()
-        sys.exit(0)
+        sys.exit()
 
     def insert_appdata(self):
         self.console.clear()
@@ -752,29 +752,34 @@ class PasswordBook:
                 "alias": [
                     "refresh",
                     "r",
-                ]
+                ],
+                "call": self._main_refresh,
             },
             "關於": {
                 "alias": [
                     "about",
-                ]
+                ],
+                "call": self.about_page,
             },
             "下一頁": {
                 "alias": [
                     "next",
                     "n",
-                ]
+                ],
+                "call": self._main_next_page,
             },
             "上一頁": {
                 "alias": [
                     "last",
                     "l",
-                ]
+                ],
+                "call": self._main_last_page,
             },
             "儲存": {
                 "alias": [
                     "save",
-                ]
+                ],
+                "call": self._main_save,
             },
         }
         all_actions = []
@@ -809,6 +814,7 @@ class PasswordBook:
                     is_user_input_error = True
                     self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
                 else:
+                    self.logger.debug(f"使用者輸入：「{user_action}」")
                     break
             if user_action not in all_actions:
                 is_user_input_error = True
@@ -825,31 +831,60 @@ class PasswordBook:
                             call = actions[action]["call"]
                             if isinstance(call, Callable):
                                 call()
-                #TODO:finish it
-                if user_action in ["新增", "add", "a"]:
-                    self.insert_appdata()
-                elif user_action in ["刪除", "delete", "d"]:
-                    self.delete_appdata()
-                elif user_action in ["離開", "quit", "q"]:
-                    break
-                elif user_action in ["重新整理", "refresh", "r"]:
-                    self.get_backend_data()
-                    self.refresh_page()
-                elif user_action in ["關於", "about"]:
-                    self.about_page()
-                elif user_action in ["下一頁", "next", "n"]:
-                    self.next_page()
-                elif user_action in ["上一頁", "last", "l"]:
-                    self.last_page()
-                elif user_action in ["儲存", "save"]:
-                    self.backend_save_data()
-                    self.logger.info(
-                        f"已儲存到檔案：「{self.data_file_path}」"
-                    )
-                else:
-                    is_user_input_error = True
-                    self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
+                                break
+                            else:
+                                is_user_input_error = True
+                                self.logger.warning("錯誤/unknown-err")
+                    else:
+                        is_user_input_error = True
+                        self.logger.warning(
+                            "輸入錯誤：請選擇一個有效的動作！"
+                        )
+                # if user_action in ["新增", "add", "a"]:
+                #     self.insert_appdata()
+                # elif user_action in ["刪除", "delete", "d"]:
+                #     self.delete_appdata()
+                # elif user_action in ["離開", "quit", "q"]:
+                #     break
+                # elif user_action in ["重新整理", "refresh", "r"]:
+                #     self.get_backend_data()
+                #     self.refresh_page()
+                # elif user_action in ["關於", "about"]:
+                #     self.about_page()
+                # elif user_action in ["下一頁", "next", "n"]:
+                #     self.next_page()
+                # elif user_action in ["上一頁", "last", "l"]:
+                #     self.last_page()
+                # elif user_action in ["儲存", "save"]:
+                #     self.backend_save_data()
+                #     self.logger.info(
+                #         f"已儲存到檔案：「{self.data_file_path}」"
+                #     )
+                # else:
+                #     is_user_input_error = True
+                #     self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
         self.close()
+
+    def _main_refresh(self):
+        self.get_backend_data()
+        self.refresh_page()
+        self.logger.info("已重新整理。")
+
+    def _main_save(self):
+        self.backend_save_data()
+        self.logger.info(f"已儲存到檔案：「{self.data_file_path}」。")
+
+    def _main_next_page(self):
+        self.next_page()
+        self.logger.info(
+            f"已切換到下一頁 ({self.page_num} / {self.page_max_num}) 。"
+        )
+
+    def _main_last_page(self):
+        self.last_page()
+        self.logger.info(
+            f"已切換到上一頁 ({self.page_num} / {self.page_max_num}) 。"
+        )
 
     def __str__(self) -> str:
         return f"""
