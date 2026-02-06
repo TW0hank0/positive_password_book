@@ -289,6 +289,9 @@ jobs:
             - github_sha： ${{ github.sha }}" \
             --prerelease \
             --repo="${{ github.repository }}"
+            ```
+            ${{ github.event.head_commit.message }}
+            ```
           echo '----Get Upload Url----'
           upload_url_base=$(gh api \
             repos/{owner}/{repo}/releases/tags/ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-full \
