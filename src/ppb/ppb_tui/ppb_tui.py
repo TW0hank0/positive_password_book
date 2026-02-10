@@ -4,12 +4,11 @@ import os
 import sys
 import logging
 
-from typing import Callable, Literal, Any, Union
+from typing import Callable, Literal, Any  # , Union
+
 
 from rich.console import Console
 from rich.panel import Panel
-
-# from rich.table import Table
 from rich.style import Style
 from rich.text import Text
 from rich.prompt import Prompt, PromptBase, Confirm
@@ -18,7 +17,6 @@ from rich.layout import Layout
 from rich.tree import Tree
 from rich.containers import Renderables
 
-
 from positive_tool import pt
 from positive_tool.verify import ArgType
 
@@ -26,9 +24,9 @@ from ..ppb_backend import ppb_backend
 from ...ppb.project_infos import project_infos
 from ..ppb_errors import error_backend
 
-project_name: str = project_infos["project_name"]
-license_file_path = project_infos["project_license_file_path"]
-project_path = project_infos["project_path"]
+project_name: str = project_infos.project_name
+license_file_path = project_infos.project_license_file_path
+project_path = project_infos.project_path
 
 
 class PPBActionPrompt(PromptBase[str]):
@@ -198,7 +196,7 @@ class PPBTUIDataBackend:
                 self.console = Console()
                 while True:
                     encrypt_password = Prompt.ask(
-                        "(quit退出) (不顯示) 請輸入密碼", password=True
+                        "(quit退出) (不顯示) 輸入密碼", password=True
                     )
                     if encrypt_password in ["quit", "退出"]:
                         sys.exit()
@@ -282,6 +280,20 @@ class PPBTUIDataBackend:
             self.logger.error("delete error")
 
 
+class PPBTUIAction:
+    __slots__ = ("name", "alias", "call")
+
+    def __init__(
+        self,
+        act_name: str,
+        act_alias: list[str],
+        act_call: Callable | None = None,
+    ) -> None:
+        self.name = act_name
+        self.alias = act_alias
+        self.call = act_call
+
+
 class PasswordBook:
     def __init__(self, logger: logging.Logger, version) -> None:
         self.console = Console()
@@ -295,46 +307,21 @@ class PasswordBook:
         self.data_backend = PPBTUIDataBackend(
             self.data_file_path, self.logger
         )
-        # self.backend: ppb_backend.PasswordBookSystem = (
-        #     ppb_backend.PasswordBookSystem.password_book_new()
-        # )
         self.data: ppb_backend.data_type = {}
         self.pages: list = []
-        # if os.path.isfile(self.data_file_path) is True:
-        #     try:
-        #         self.backend.password_book_load(self.data_file_path)
-        #     except json.JSONDecodeError:
-        #         self.console.print("檔案格式錯誤！")
-        #         self.console.print_exception(show_locals=True)
-        #         sys.exit(1)
-        # else:
-        #     self.backend.password_book_new()
-        # self.setting = {}
-        # self.setting_init_dict = {}
         self.setting_file_path = os.path.abspath(
             os.path.join(project_path, "setting_tui.json")
         )
         self.setting = PPBSetting(self.setting_file_path, self.logger)
-        # self.setting_init()
         self.left_change_unsave: bool = False
         self.content_per_page: int = self.console.size.height - 13
         self.page_num = 0
         self.page_max_num = 0
         #
-        self.init_color()
         self.get_backend_data()
         self.refresh_page()
         #
         self.main()
-
-    def init_color(self):
-        self.colors = {}
-        # tmp = {"purple": Color.from_rgb(175, 0, 255).get_ansi_codes()}
-        # for i in tmp:
-        #     tmp_color = ""
-        #     for i2 in tmp[i]:
-        #         tmp_color = tmp_color + f"\033[{i2}m"
-        #     self.colors[i] = tmp_color
 
     def get_backend_data(self):
         # self.data = self.backend.password_book_get_data()
@@ -699,117 +686,169 @@ class PasswordBook:
             self.logger.warning("已是第一頁！")
 
     def advance_save(self):
+        self.console.clear()
         options = ["不加密儲存", "加密儲存"]
+        options_alias = options.copy()
+        options_alias.extend(["nesave", "esave"])
         for option in options:
-            self.console.print(f"． {option}")
-        user_option = Prompt.ask("選擇一種儲存方式", choices=options)
-        if user_option == "不加密儲存":
+            self.console.print(f"● {option}")
+        user_option = Prompt.ask("選擇一種儲存方式", choices=options_alias)
+        if user_option in ["不加密儲存", "nesave"]:
             self.data_backend.save_to_no_encrypt()
             self.data_backend.is_encrypt = False
-        elif user_option == "加密儲存":
-            encrypt_password = Prompt.ask("加密密碼")
-            retype_encrypt_password = Prompt.ask("再次輸入加密密碼")
-            if encrypt_password == retype_encrypt_password:
-                self.data_backend.save_to_encrypt(encrypt_password)
-                self.data_backend.is_encrypt = True
-                self.data_backend.encrypt_password = encrypt_password
-                self.logger.info("已加密儲存！")
+            self.logger.info("（未加密）已儲存。")
+        elif user_option in ["加密儲存", "esave"]:
+            encrypt_password = Prompt.ask(
+                "(不顯示) (quit退出) 加密密碼", password=True
+            )
+            if encrypt_password == "quit":
+                self.logger.info("使用者已取消儲存。")
             else:
-                self.logger.info("密碼輸入錯誤：第1/2次輸入不同！")
+                retype_encrypt_password = Prompt.ask(
+                    "(不顯示) (quit退出) 再次輸入加密密碼", password=True
+                )
+                if retype_encrypt_password == "quit":
+                    self.logger.info("使用者已取消儲存。")
+                else:
+                    if encrypt_password == retype_encrypt_password:
+                        self.data_backend.save_to_encrypt(encrypt_password)
+                        self.data_backend.is_encrypt = True
+                        self.data_backend.encrypt_password = (
+                            encrypt_password
+                        )
+                        self.logger.info("已加密儲存！")
+                    else:
+                        self.logger.info(
+                            "密碼輸入錯誤：第1次和第2次輸入不同！"
+                        )
 
     def main(self):
-        self.console.print(
-            "\n" * self.console.size.height
-        )  # 防止覆蓋之前的內容
+        self.console.print("\n" * self.console.size.height)
         is_user_input_error = False
-        # old_actions = [
-        #     "新增",
-        #     "add",
-        #     "a",
-        #     "刪除",
-        #     "delete",
-        #     "d",
-        #     "離開",
-        #     "quit",
-        #     "q",
-        #     "重新整理",
-        #     "refresh",
-        #     "r",
-        #     "關於",
-        #     "about",
-        #     "下一頁",
-        #     "next",
-        #     "n",
-        #     "上一頁",
-        #     "last",
-        #     "l",
-        #     "儲存",
-        #     "save",
-        # ]
-        actions: dict[
-            str,
-            dict[
-                Union[str, Literal["alias", "call"]],
-                Union[list[str], Callable],
-            ],
-        ] = {
-            "新增": {"alias": ["add", "a"], "call": self.insert_appdata},
-            "刪除": {
-                "alias": [
+        # actions_old: dict[
+        #     str,
+        #     dict[
+        #         Union[str, Literal["alias", "call"]],
+        #         Union[list[str], Callable],
+        #     ],
+        # ] = {
+        #     "新增": {"alias": ["add", "a"], "call": self.insert_appdata},
+        #     "刪除": {
+        #         "alias": [
+        #             "delete",
+        #             "d",
+        #         ],
+        #         "call": self.delete_appdata,
+        #     },
+        #     "離開": {
+        #         "alias": [
+        #             "quit",
+        #             "q",
+        #         ]
+        #     },
+        #     "重新整理": {
+        #         "alias": [
+        #             "refresh",
+        #             "r",
+        #         ],
+        #         "call": self._main_refresh,
+        #     },
+        #     "關於": {
+        #         "alias": [
+        #             "about",
+        #         ],
+        #         "call": self.about_page,
+        #     },
+        #     "下一頁": {
+        #         "alias": [
+        #             "next",
+        #             "n",
+        #         ],
+        #         "call": self._main_next_page,
+        #     },
+        #     "上一頁": {
+        #         "alias": [
+        #             "last",
+        #             "l",
+        #         ],
+        #         "call": self._main_last_page,
+        #     },
+        #     "儲存": {
+        #         "alias": [
+        #             "save",
+        #         ],
+        #         "call": self._main_save,
+        #     },
+        #     "進階儲存": {
+        #         "alias": ["advance-save", "asave"],
+        #         "call": self.advance_save,
+        #     },
+        # }
+        actions: list[PPBTUIAction] = [
+            PPBTUIAction("新增", ["add", "a"], self.insert_appdata),
+            PPBTUIAction(
+                "刪除",
+                [
                     "delete",
                     "d",
                 ],
-                "call": self.delete_appdata,
-            },
-            "離開": {
-                "alias": [
+                self.delete_appdata,
+            ),
+            PPBTUIAction(
+                "離開",
+                [
                     "quit",
                     "q",
-                ]
-            },
-            "重新整理": {
-                "alias": [
+                ],
+            ),
+            PPBTUIAction(
+                "重新整理",
+                [
                     "refresh",
                     "r",
                 ],
-                "call": self._main_refresh,
-            },
-            "關於": {
-                "alias": [
+                self._main_refresh,
+            ),
+            PPBTUIAction(
+                "關於",
+                [
                     "about",
                 ],
-                "call": self.about_page,
-            },
-            "下一頁": {
-                "alias": [
+                self.about_page,
+            ),
+            PPBTUIAction(
+                "下一頁",
+                [
                     "next",
                     "n",
                 ],
-                "call": self._main_next_page,
-            },
-            "上一頁": {
-                "alias": [
+                self._main_next_page,
+            ),
+            PPBTUIAction(
+                "上一頁",
+                [
                     "last",
                     "l",
                 ],
-                "call": self._main_last_page,
-            },
-            "儲存": {
-                "alias": [
+                self._main_last_page,
+            ),
+            PPBTUIAction(
+                "儲存",
+                [
                     "save",
                 ],
-                "call": self._main_save,
-            },
-            "進階儲存": {
-                "alias": ["advance-save", "asave"],
-                "call": self.advance_save,
-            },
-        }
+                self._main_save,
+            ),
+            PPBTUIAction(
+                "進階儲存",
+                ["advance-save", "asave"],
+                self.advance_save,
+            ),
+        ]
         all_actions = []
         for action in actions:
-            all_actions.append(action)
-            # TODO:remove ignore
-            all_actions.extend(actions[action]["alias"])  # pyright: ignore[reportArgumentType]
+            all_actions.append(action.name)
+            all_actions.extend(action.alias)
         self.console.clear()
         while True:
             while True:
@@ -819,12 +858,12 @@ class PasswordBook:
                     self.console.print(
                         "輸入錯誤：請選擇一個有效的動作！",
                         style=Style(
-                            blink=True, underline=True, color="red"
+                            underline=True, color="red", bold=True
                         ),
                     )
                     is_user_input_error = False
                 prompt = Text("輸入動作") + Text(
-                    f"〔{', '.join(actions.keys())}〕",
+                    f"〔{', '.join([action.name for action in actions])}〕",
                     style=Style(color="bright_magenta"),
                 )
                 try:
@@ -848,12 +887,12 @@ class PasswordBook:
                 else:
                     for action in actions:
                         if (
-                            user_action == action
-                            or user_action in actions[action]["alias"]  # pyright: ignore[reportOperatorIssue]
+                            user_action == action.name
+                            or user_action in action.alias
                         ):
-                            call = actions[action]["call"]
-                            if isinstance(call, Callable):
-                                call()
+                            act_call = action.call
+                            if isinstance(act_call, Callable):
+                                act_call()
                                 break
                             else:
                                 is_user_input_error = True
@@ -925,7 +964,7 @@ def launcher():
     time_format_str = time_now.strftime("%Y-%d-%m_%H-%M-%S")
     log_file_path = os.path.join(log_dir, f"log_{time_format_str}.log")
     logger = pt.build_logger(log_file_path, f"{project_name}_logger")
-    main(logger, project_infos["version"])
+    main(logger, project_infos.project_version)
 
 
 if __name__ == "__main__":

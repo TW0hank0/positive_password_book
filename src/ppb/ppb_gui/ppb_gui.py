@@ -31,9 +31,9 @@ from . import styles
 from ..project_infos import project_infos
 from ..ppb_backend import ppb_backend
 
-project_name = project_infos["project_name"]
-project_path = project_infos["project_path"]
-version = project_infos["version"]
+project_name = project_infos.project_name
+project_path = project_infos.project_path
+version = project_infos.project_version
 font_noto_sans_path = os.path.normpath(
     os.path.join(
         project_path,
@@ -157,7 +157,7 @@ class PasswordBookGui(QMainWindow):
         self.app = app
         self.logger: logging.Logger = logger
         self.config_path = os.path.join(
-            project_infos["project_path"], "password_data.json"
+            project_infos.project_path, "password_data.json"
         )
         self.backend = ppb_backend.PasswordBookSystem.password_book_load(
             self.config_path
@@ -262,8 +262,8 @@ class PasswordBookGui(QMainWindow):
 
         # 設定視窗屬性
         self.resize(1080, 720)
-        self.setWindowTitle(project_infos["project_name"])
-        self.title_bar.title_label.setText(project_infos["project_name"])
+        self.setWindowTitle(project_infos.project_name)
+        self.title_bar.title_label.setText(project_infos.project_name)
 
     def _clear_existing_widgets(self):
         """清除現有元件"""
@@ -385,7 +385,7 @@ def main(logger):
     app.setFont(app_font)
     window = PasswordBookGui(app, logger)
     window.show()
-    icon_path = os.path.join(project_infos["project_path"], "icon.png")
+    icon_path = os.path.join(project_infos.project_path, "icon.png")
     if os.path.exists(icon_path):
         app.setWindowIcon(QIcon(icon_path))
     app.exec()

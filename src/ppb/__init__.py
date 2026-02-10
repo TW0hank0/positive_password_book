@@ -1,4 +1,4 @@
-from . import project_infos
+from .project_infos import project_infos
 
-__name__ = "positive_password_book"
-__version__ = project_infos.project_infos["version"]
+__name__ = project_infos.project_name
+__version__ = project_infos.project_version

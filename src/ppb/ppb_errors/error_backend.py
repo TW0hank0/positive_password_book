@@ -22,7 +22,7 @@ class BackendDeleteError(PPBBackendError):
 
 
 class BackendEncryptError(PPBBackendError):
-    """加密/解密時發生錯誤"""
+    """加密/解密錯誤"""
 
 
 class BackendWrongPassword(PPBBackendError):

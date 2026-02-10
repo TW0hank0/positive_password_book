@@ -4,8 +4,13 @@ import base64
 
 from typing import Literal, Self, Union, Optional
 
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+try:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+except (ImportError, ModuleNotFoundError):
+    enable_encrypt_feature = False
+else:
+    enable_encrypt_feature = True
 
 from positive_tool.verify import ArgType
 from positive_tool import pt
@@ -227,26 +232,29 @@ class PasswordBookSystem:
             return None
 
     def encrypt_data(self, data: bytes, password: str) -> bytes:
-        # 產生salt
-        salt: bytes = secrets.token_bytes(16)
-        # 使用 Scrypt
-        kdf = Scrypt(
-            salt=salt,
-            length=32,
-            n=2**17,
-            r=8,
-            p=1,
-        )
-        key: bytes = kdf.derive(password.encode("utf-8"))
-        # 產生隨機nonce
-        nonce: bytes = secrets.token_bytes(12)
-        # 使用 AES-GCM 加密
-        aesgcm = AESGCM(key)
-        ciphertext: bytes = aesgcm.encrypt(
-            nonce, data, associated_data=None
-        )
-        # 回傳
-        return salt + nonce + ciphertext
+        if enable_encrypt_feature is False:
+            raise error_backend.BackendEncryptError("未安裝加密功能！")
+        else:
+            # 產生salt
+            salt: bytes = secrets.token_bytes(16)
+            # 使用 Scrypt
+            kdf = Scrypt(  # pyright: ignore[reportPossiblyUnboundVariable]
+                salt=salt,
+                length=32,
+                n=2**17,
+                r=8,
+                p=1,
+            )
+            key: bytes = kdf.derive(password.encode("utf-8"))
+            # 產生隨機nonce
+            nonce: bytes = secrets.token_bytes(12)
+            # 使用 AES-GCM 加密
+            aesgcm = AESGCM(key)  # pyright: ignore[reportPossiblyUnboundVariable]
+            ciphertext: bytes = aesgcm.encrypt(
+                nonce, data, associated_data=None
+            )
+            # 回傳
+            return salt + nonce + ciphertext
 
     def get_is_encrypt(self):
         return self._is_encrypt
@@ -256,37 +264,39 @@ class PasswordBookSystem:
 
 
 def decrypt_data(encrypted_data: bytes, password: str) -> Optional[bytes]:
-    # if len(encrypted_data) < 28:  # salt(16) + nonce(12) 最小長度
-    #     return None
-    ######################
-    # 分割資料
-    salt: bytes = encrypted_data[:16]
-    nonce: bytes = encrypted_data[16:28]
-    ciphertext: bytes = encrypted_data[28:]
-    # 使用相同 salt 和密碼重新派生金鑰
-    kdf = Scrypt(
-        salt=salt,
-        length=32,
-        n=2**17,
-        r=8,
-        p=1,
-    )
-    try:
-        key: bytes = kdf.derive(password.encode("utf-8"))
-    except Exception as e:
-        raise error_backend.BackendEncryptError(e)  # 密碼錯誤或 KDF 失敗
+    if enable_encrypt_feature is False:
+        raise error_backend.BackendEncryptError("未安裝加密功能！")
     else:
-        # 解密
-        aesgcm = AESGCM(key)
+        # 分割資料
+        salt: bytes = encrypted_data[:16]
+        nonce: bytes = encrypted_data[16:28]
+        ciphertext: bytes = encrypted_data[28:]
+        # 使用相同 salt 和密碼重新派生金鑰
+        kdf = Scrypt(  # pyright: ignore[reportPossiblyUnboundVariable]
+            salt=salt,
+            length=32,
+            n=2**17,
+            r=8,
+            p=1,
+        )
         try:
-            plaintext: bytes = aesgcm.decrypt(
-                nonce, ciphertext, associated_data=None
-            )
-            return plaintext
+            key: bytes = kdf.derive(password.encode("utf-8"))
         except Exception as e:
             raise error_backend.BackendEncryptError(
                 e
-            )  # 密鑰錯誤、nonce 錯誤、或資料被竄改
+            )  # 密碼錯誤或 KDF 失敗
+        else:
+            # 解密
+            aesgcm = AESGCM(key)  # pyright: ignore[reportPossiblyUnboundVariable]
+            try:
+                plaintext: bytes = aesgcm.decrypt(
+                    nonce, ciphertext, associated_data=None
+                )
+                return plaintext
+            except Exception as e:
+                raise error_backend.BackendEncryptError(
+                    e
+                )  # 密鑰錯誤、nonce 錯誤、或資料被竄改
 
 
 def get_is_file_encrypt(filepath: str):
