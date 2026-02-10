@@ -196,7 +196,8 @@ class PPBTUIDataBackend:
                 self.console = Console()
                 while True:
                     encrypt_password = Prompt.ask(
-                        "(quit退出) (不顯示) 輸入密碼", password=True
+                        "[PPB] (quit退出) (不顯示) 輸入密碼",
+                        password=True,
                     )
                     if encrypt_password in ["quit", "退出"]:
                         sys.exit()
