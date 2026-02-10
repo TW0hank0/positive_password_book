@@ -337,8 +337,8 @@ name = "positive-password-book"
 version = "0.4.1"
 source = { editable = "." }
 dependencies = [
-    { name = "cryptography" },
     { name = "positive-tool" },
+    { name = "rich" },
     { name = "typer" },
 ]
 
@@ -351,26 +351,26 @@ check = [
     { name = "ruff" },
     { name = "ty" },
 ]
+feature-encrypt = [
+    { name = "cryptography" },
+]
 gui = [
     { name = "pyside6" },
-]
-tui = [
-    { name = "rich" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "cryptography", specifier = "~=46.0.4" },
+    { name = "cryptography", marker = "extra == 'feature-encrypt'", specifier = "~=46.0.4" },
     { name = "mypy", marker = "extra == 'check'", specifier = ">=1.19.1" },
     { name = "positive-tool", specifier = "~=0.6.0" },
     { name = "pyinstaller", marker = "extra == 'build'", specifier = ">=6.17.0" },
     { name = "pyside6", marker = "extra == 'gui'", specifier = ">=6.10.1" },
-    { name = "rich", marker = "extra == 'tui'", specifier = ">=14.2.0" },
+    { name = "rich", specifier = ">=14.2.0" },
     { name = "ruff", marker = "extra == 'check'", specifier = ">=0.14.14" },
     { name = "ty", marker = "extra == 'check'", specifier = ">=0.0.14" },
     { name = "typer", specifier = "~=0.20.1" },
 ]
-provides-extras = ["tui", "gui", "build", "check"]
+provides-extras = ["gui", "build", "check", "feature-encrypt"]
 
 [[package]]
 name = "positive-tool"

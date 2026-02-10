@@ -14,15 +14,17 @@ from positive_tool import pt, verify
 if hasattr(sys, "_MEIPASS") is False:
     sys.path.insert(
         0,
-        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")),
+        os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..")
+        ),
     )
 
 from ...ppb.project_infos import project_infos
 
 tb_install(show_locals=True)
-PROJECT_NAME: str = project_infos["project_name"]
-project_path: str = project_infos["project_path"]
-version = project_infos["version"]
+PROJECT_NAME: str = project_infos.project_name
+project_path: str | os.PathLike = project_infos.project_path
+version = project_infos.project_version
 app_cli = typer.Typer(name=PROJECT_NAME, pretty_exceptions_short=False)
 
 
