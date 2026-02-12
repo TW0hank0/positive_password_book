@@ -30,7 +30,7 @@ jobs:
         run: uv venv
 
       - name: Install project dependencies with uv
-        run: uv sync --extra tui --extra build
+        run: uv sync --all-extras
 
       - name: Build executable with pyinstaller
         run: uv run pyinstaller ppb_full.spec
