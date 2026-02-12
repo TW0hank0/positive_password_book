@@ -109,7 +109,7 @@ class PPBLogHandler(logging.Handler):
         return self.logs.copy()
 
 
-class PPBSetting:  # TODO: 待轉成GUI、TUI通用，移到ppb_backend
+class PPBSetting:
     init_setting: dict = {"acc_tree__tree_type": "same_line"}
 
     def __init__(
@@ -136,7 +136,7 @@ class PPBSetting:  # TODO: 待轉成GUI、TUI通用，移到ppb_backend
             and (
                 self._bytes_to_mb(os.path.getsize(self.setting_file_path))
                 < 10
-            )  # 確保檔案不會過大
+            )
         ):
             with open(self.setting_file_path, "r", encoding="utf-8") as f:
                 try:
