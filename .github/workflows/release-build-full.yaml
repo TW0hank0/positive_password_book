@@ -1,4 +1,4 @@
-name: build-and-upload-release-gui
+name: build-and-upload-release-full
 
 permissions:
   contents: write
@@ -30,10 +30,10 @@ jobs:
         run: uv venv
 
       - name: Install project dependencies with uv
-        run: uv sync --extra gui --extra build --extra feature_encrypt
+        run: uv sync --all-extras
 
       - name: Build executable with pyinstaller
-        run: uv run pyinstaller ppb_gui.spec
+        run: uv run pyinstaller ppb_full.spec
 
       - name: Prepare CI Venv
         run: |
@@ -115,14 +115,14 @@ jobs:
           cd ..
 
       - name: Upload exe artifact (Windows)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: runner.os == 'Windows'
         with:
           name: ${{ steps.rename_exe_windows.outputs.exe_path }}
           path: dist/*
 
       - name: Upload exe artifact (Linux)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: runner.os == 'Linux'
         with:
           name: ${{ steps.rename_exe_linux.outputs.exe_path }}
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: artifacts
 

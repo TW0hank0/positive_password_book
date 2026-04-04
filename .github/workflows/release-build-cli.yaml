@@ -1,4 +1,4 @@
-name: build-and-upload-release-gui
+name: build-and-upload-release-cli
 
 permissions:
   contents: write
@@ -30,10 +30,10 @@ jobs:
         run: uv venv
 
       - name: Install project dependencies with uv
-        run: uv sync --extra gui --extra build --extra feature_encrypt
+        run: uv sync --extra build --extra feature_encrypt
 
       - name: Build executable with pyinstaller
-        run: uv run pyinstaller ppb_gui.spec
+        run: uv run pyinstaller ppb_cli.spec
 
       - name: Prepare CI Venv
         run: |

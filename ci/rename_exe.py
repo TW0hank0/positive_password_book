@@ -15,7 +15,9 @@ def main():
                 "dist",
             )
         ):
-            if i.startswith("ppb"):
+            if i.startswith("ppb") or i.startswith(
+                "positive_password_book"
+            ):
                 orig = os.path.abspath(
                     os.path.join(
                         os.path.dirname(__file__), "..", "dist", i
@@ -40,22 +42,26 @@ def main():
             )
         )
         ver = d["project"]["version"]
+    if os.name == "posix":
+        sys_platform = "linux"
+    else:
+        sys_platform = "windows"
     root, ext = os.path.splitext(os.path.basename(orig))
     if ext == "" or ext is None:
         if "--pre" in sys.argv:
-            new_name = f"{root}_{pyver}_pre-{ver}.bin"
+            new_name = f"{root}_{pyver}_pre-{ver}_{sys_platform}.bin"
         else:
-            new_name = f"{root}_{pyver}_{ver}.bin"
+            new_name = f"{root}_{pyver}_{ver}_{sys_platform}.bin"
     else:
         if "--pre" in sys.argv:
-            new_name = f"{root}_{pyver}_pre-{ver}{ext}"
+            new_name = f"{root}_{pyver}_pre-{ver}_{sys_platform}{ext}"
         else:
-            new_name = f"{root}_{pyver}_{ver}{ext}"
+            new_name = f"{root}_{pyver}_{ver}_{sys_platform}{ext}"
     if platform.platform() == "Linux":
         new_name = f"{new_name}.bin"
     new_path = os.path.join(os.path.dirname(orig), new_name)
     os.rename(orig, new_path)
-    print(new_path)
+    print(os.path.basename(new_path))
 
 
 if __name__ == "__main__":

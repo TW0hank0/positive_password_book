@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 import time
-from typing import Any, Literal
+from typing import Any, Callable, Literal
 
 from positive_tool import pt
 from positive_tool.verify import ArgType
@@ -20,10 +20,11 @@ from rich.tree import Tree
 
 from ...ppb.project_infos import project_infos
 from ..ppb_backend import ppb_backend
+from ..ppb_errors import error_backend
 
-project_name: str = project_infos["project_name"]
-license_file_path = project_infos["project_license_file_path"]
-project_path = project_infos["project_path"]
+project_name: str = project_infos.project_name
+license_file_path = project_infos.project_license_file_path
+project_path = project_infos.project_path
 
 
 class PPBActionPrompt(PromptBase[str]):
@@ -50,15 +51,6 @@ class PPBActionPrompt(PromptBase[str]):
 
     def process_response(self, value: str) -> str:
         return value
-        # if (
-        #     value is not None
-        #     and type(value) is str
-        #     and value in self.choices
-        #     or value in ["debug"]
-        # ):  # type: ignore
-        #     return value
-        # else:
-        #     raise ValueError(f"在{len(self.choices)}個動作中選擇一個動作！")
 
 
 class PPBLogHandler(logging.Handler):
@@ -115,7 +107,7 @@ class PPBLogHandler(logging.Handler):
         return self.logs.copy()
 
 
-class PPBSetting:  # TODO: 待轉成GUI、TUI通用，移到ppb_backend
+class PPBSetting:
     init_setting: dict = {"acc_tree__tree_type": "same_line"}
 
     def __init__(
@@ -186,6 +178,121 @@ class PPBSetting:  # TODO: 待轉成GUI、TUI通用，移到ppb_backend
             sys.exit(1)
 
 
+class PPBTUIDataBackend:
+    def __init__(self, file_path: str, logger: logging.Logger) -> None:
+        self.file_path = file_path
+        self.logger = logger
+        if os.path.exists(file_path) is True:
+            if ppb_backend.get_is_file_encrypt(file_path) is False:
+                self.backend = (
+                    ppb_backend.PasswordBookSystem.password_book_load(
+                        file_path
+                    )
+                )
+                self.is_encrypt = False
+            else:
+                self.console = Console()
+                while True:
+                    encrypt_password = Prompt.ask(
+                        "[PPB] (quit退出) (不顯示) 輸入密碼",
+                        password=True,
+                    )
+                    if encrypt_password in ["quit", "退出"]:
+                        sys.exit()
+                    else:
+                        try:
+                            self.backend = ppb_backend.PasswordBookSystem.load_encrypt(
+                                file_path, encrypt_password
+                            )
+                        except error_backend.BackendWrongPassword:
+                            msg = "密碼錯誤！"
+                            self.logger.warning(msg)
+                            self.console.print(f"[yelow]{msg}[/yellow]")
+                        else:
+                            if (
+                                type(self.backend)
+                                is ppb_backend.PasswordBookSystem
+                            ):
+                                self.encrypt_password = encrypt_password
+                                self.is_encrypt = True
+                                break
+                            else:
+                                msg = "資料回傳錯誤！"
+                                self.logger.warning(msg)
+                                self.console.print(
+                                    f"[yellow]{msg}[/yellow]"
+                                )
+        else:
+            self.backend = (
+                ppb_backend.PasswordBookSystem.password_book_new()
+            )
+
+    def save(self):
+        if self.backend is not None:
+            if self.is_encrypt is True:
+                self.backend.save_encrypt(
+                    self.file_path, self.encrypt_password
+                )
+            else:
+                self.backend.password_book_save(self.file_path)
+        else:
+            self.logger.error("save error")
+
+    def save_to_encrypt(self, encrypt_password: str):
+        if self.backend is not None:
+            self.backend.save_encrypt(self.file_path, encrypt_password)
+        else:
+            self.logger.error("save error")
+
+    def save_to_no_encrypt(self):
+        if self.backend is not None:
+            self.backend.password_book_save(self.file_path)
+        else:
+            self.logger.error("save error")
+
+    def get_data(self):
+        if self.backend is not None:
+            return self.backend.password_book_get_data()
+        else:
+            self.logger.error("資料回傳錯誤！")
+            return {}
+
+    def insert_data(
+        self,
+        app: str,
+        acc: str,
+        pwd: str,
+        usernote: str = "",
+        note: str = "",
+    ):
+        if self.backend is not None:
+            self.backend.password_book_insert(
+                app, acc, pwd, note=note, user_note=usernote
+            )
+        else:
+            self.logger.error("insert error")
+
+    def delete_data(self, app, acc):
+        if self.backend is not None:
+            self.backend.password_book_delete(app, acc)
+        else:
+            self.logger.error("delete error")
+
+
+class PPBTUIAction:
+    __slots__ = ("name", "alias", "call")
+
+    def __init__(
+        self,
+        act_name: str,
+        act_alias: list[str],
+        act_call: Callable | None = None,
+    ) -> None:
+        self.name = act_name
+        self.alias = act_alias
+        self.call = act_call
+
+
 class PasswordBook:
     def __init__(self, logger: logging.Logger, version) -> None:
         self.console = Console()
@@ -193,139 +300,36 @@ class PasswordBook:
         self.ppb_tui_log_handler = PPBLogHandler(console=self.console)
         self.logger.addHandler(self.ppb_tui_log_handler)
         self.version = version
-        self.backend = ppb_backend.PasswordBookSystem()
-        self.data: ppb_backend.data_type = {}
-        self.pages: list = []
         self.data_file_path: str = os.path.abspath(
             os.path.join(project_path, "password_data.json")
         )
-        if os.path.isfile(self.data_file_path) is True:
-            try:
-                self.backend.password_book_load(self.data_file_path)
-            except json.JSONDecodeError:
-                self.console.print("檔案格式錯誤！")
-                self.console.print_exception(show_locals=True)
-                sys.exit(1)
-        else:
-            self.backend.password_book_new()
-        # self.setting = {}
-        # self.setting_init_dict = {}
+        self.data_backend = PPBTUIDataBackend(
+            self.data_file_path, self.logger
+        )
+        self.data: ppb_backend.data_type = {}
+        self.pages: list = []
         self.setting_file_path = os.path.abspath(
             os.path.join(project_path, "setting_tui.json")
         )
         self.setting = PPBSetting(self.setting_file_path, self.logger)
-        # self.setting_init()
         self.left_change_unsave: bool = False
         self.content_per_page: int = self.console.size.height - 13
         self.page_num = 0
         self.page_max_num = 0
         #
-        self.init_color()
         self.get_backend_data()
         self.refresh_page()
         #
         self.main()
 
-    def init_color(self):
-        self.colors = {}
-        # tmp = {"purple": Color.from_rgb(175, 0, 255).get_ansi_codes()}
-        # for i in tmp:
-        #     tmp_color = ""
-        #     for i2 in tmp[i]:
-        #         tmp_color = tmp_color + f"\033[{i2}m"
-        #     self.colors[i] = tmp_color
-
     def get_backend_data(self):
-        # if self.data is None:
-        # self.backend.password_book_new()
-        self.data = self.backend.password_book_get_data()
+        # self.data = self.backend.password_book_get_data()
+        self.data = self.data_backend.get_data()
         self.refresh_page()
 
     def backend_save_data(self):
-        self.backend.password_book_save(self.data_file_path)
-
-    def print_data_old(self):
-        #
-        # self.console.clear()
-        # if self.data is None:
-        # self.get_backend_data()
-        # if hasattr(self, "pages") is False:
-        # self.refresh_page()
-        #
-        self.logger.debug(f"所有分頁： {self.pages}")
-        self.logger.debug(f"資料： {self.data}")
-        self.logger.debug(f"總頁數： {self.page_max_num}")
-        #
-        table = Table()
-        header_style = Style(color="blue")
-        table.add_column(
-            "應用程式", min_width=10, header_style=header_style
-        )
-        table.add_column("帳號", min_width=20, header_style=header_style)
-        table.add_column("密碼", min_width=20, header_style=header_style)
-        table.add_column(
-            "user_note", header_style=header_style, min_width=10
-        )
-        table.add_column("note", header_style=header_style, min_width=10)
-        if len(self.pages) > 0 and self.page_max_num > 0:
-            for app, app_data in self.pages[self.page_num - 1]:
-                self.logger.debug(f"app:{app}, app_data:{app_data}")
-                if app == "trash_can":
-                    continue
-                else:
-                    table.add_row(app, app_data["acc"], app_data["pwd"])
-        layout = Layout()
-        layout.add_split(Layout(table))
-        # layout.add_split(Layout(Text(f"第{self.page_num}頁，共{self.page_max_num}頁")))
-        page_info = Text(
-            f"第{self.page_num}頁，共{self.page_max_num}頁",
-            style="",
-            end="",
-        )
-        version_text = f"版本： {self.version}"
-        version_info = Text(
-            (
-                " "
-                * (
-                    int(
-                        (
-                            self.console.size.width
-                            - 4
-                            - (len(str(page_info)) + 5)
-                            - (len(version_text) + 3)
-                        )
-                        / 2
-                    )
-                    - int((len(version_text) + 3) / 2)
-                )
-            )
-            + version_text
-        )
-        info_rule = Rule(style=Style(color="green", dim=True))
-        infos = Renderables([page_info, version_info])
-        content = Renderables([infos, info_rule, table])
-        # 建立內容組合
-        # content = Renderables(
-        # [table, Align(page_info, align="right", vertical="bottom")]
-        # )
-        # self.console.print(
-        # Panel(
-        # layout,
-        # title=Text(PROJECT_NAME, style=Style(color="purple", bold=True)),
-        # height=self.console.size.height - 3,
-        # )
-        # )
-        # self.console.print(Text(f"第{self.page_num}頁，共{self.page_max_num}頁"))
-        self.console.print(
-            Panel(
-                content,
-                title=Text(
-                    project_name,
-                    style=Style(color="purple", bold=True),
-                ),
-                height=self.console.size.height - 3,
-            )
-        )
+        # self.backend.password_book_save(self.data_file_path)
+        self.data_backend.save()
 
     def print_data(self, clear_scrren: bool = False):
         self.logger.debug(f"所有分頁： {self.pages}")
@@ -437,7 +441,7 @@ class PasswordBook:
 
     def close(self):
         self.backend_save_data()
-        sys.exit(0)
+        sys.exit()
 
     def insert_appdata(self):
         self.console.clear()
@@ -455,10 +459,10 @@ class PasswordBook:
         app_name = Prompt.ask("應用程式")
         acc = Prompt.ask("帳號")
         pwd = Prompt.ask("密碼")
-        usernote = Prompt.ask("筆記(usernote)：")
+        usernote = Prompt.ask("筆記(usernote)")
         #
-        key_style = Style(color="blue")
-        value_style = Style(color="yellow")
+        key_style = Style(color="bright_blue")
+        value_style = Style(color="bright_yellow")
         tree = Tree(app_name, style=key_style)
         tree.add("帳號：", style=key_style).add(acc, style=value_style)
         tree.add("密碼：", style=key_style).add(pwd, style=value_style)
@@ -467,8 +471,8 @@ class PasswordBook:
         )
         self.console.print(tree)
         if Confirm.ask("是否正確： ", console=self.console) is True:
-            self.backend.password_book_insert(
-                app_name, acc, pwd, user_note=usernote
+            self.data_backend.insert_data(
+                app_name, acc, pwd, usernote=usernote
             )
             self.logger.info(
                 f"新增：應用程式「{app_name}」、帳號「{acc}」、密碼「{pwd}」、筆記「{usernote}」。"
@@ -538,7 +542,7 @@ class PasswordBook:
                 break
         self.console.print(self.acc_tree(app, acc))
         if Confirm.ask("是否要刪除？") is True:
-            self.backend.password_book_delete(app, acc)
+            self.data_backend.delete_data(app, acc)
             self.get_backend_data()
             self.logger.info(f"已刪除應用程式「{app}」的帳號「{acc}」。")
             self.console.print("已完成刪除。")
@@ -677,35 +681,172 @@ class PasswordBook:
         else:
             self.logger.warning("已是第一頁！")
 
+    def advance_save(self):
+        self.console.clear()
+        options = ["不加密儲存", "加密儲存"]
+        options_alias = options.copy()
+        options_alias.extend(["nesave", "esave"])
+        for option in options:
+            self.console.print(f"● {option}")
+        user_option = Prompt.ask("選擇一種儲存方式", choices=options_alias)
+        if user_option in ["不加密儲存", "nesave"]:
+            self.data_backend.save_to_no_encrypt()
+            self.data_backend.is_encrypt = False
+            self.logger.info("（未加密）已儲存。")
+        elif user_option in ["加密儲存", "esave"]:
+            encrypt_password = Prompt.ask(
+                "(不顯示) (quit退出) 加密密碼", password=True
+            )
+            if encrypt_password == "quit":
+                self.logger.info("使用者已取消儲存。")
+            else:
+                retype_encrypt_password = Prompt.ask(
+                    "(不顯示) (quit退出) 再次輸入加密密碼", password=True
+                )
+                if retype_encrypt_password == "quit":
+                    self.logger.info("使用者已取消儲存。")
+                else:
+                    if encrypt_password == retype_encrypt_password:
+                        self.data_backend.save_to_encrypt(encrypt_password)
+                        self.data_backend.is_encrypt = True
+                        self.data_backend.encrypt_password = (
+                            encrypt_password
+                        )
+                        self.logger.info("已加密儲存！")
+                    else:
+                        self.logger.info(
+                            "密碼輸入錯誤：第1次和第2次輸入不同！"
+                        )
+
     def main(self):
         self.console.print(
             "\n" * self.console.size.height
         )  # 防止覆蓋之前的內容
         is_user_input_error = False
-        actions = [
-            "新增",
-            "add",
-            "a",
-            "刪除",
-            "delete",
-            "d",
-            "離開",
-            "quit",
-            "q",
-            "重新整理",
-            "refresh",
-            "r",
-            "關於",
-            "about",
-            "下一頁",
-            "next",
-            "n",
-            "上一頁",
-            "last",
-            "l",
-            "儲存",
-            "save",
+        # actions_old: dict[
+        #     str,
+        #     dict[
+        #         Union[str, Literal["alias", "call"]],
+        #         Union[list[str], Callable],
+        #     ],
+        # ] = {
+        #     "新增": {"alias": ["add", "a"], "call": self.insert_appdata},
+        #     "刪除": {
+        #         "alias": [
+        #             "delete",
+        #             "d",
+        #         ],
+        #         "call": self.delete_appdata,
+        #     },
+        #     "離開": {
+        #         "alias": [
+        #             "quit",
+        #             "q",
+        #         ]
+        #     },
+        #     "重新整理": {
+        #         "alias": [
+        #             "refresh",
+        #             "r",
+        #         ],
+        #         "call": self._main_refresh,
+        #     },
+        #     "關於": {
+        #         "alias": [
+        #             "about",
+        #         ],
+        #         "call": self.about_page,
+        #     },
+        #     "下一頁": {
+        #         "alias": [
+        #             "next",
+        #             "n",
+        #         ],
+        #         "call": self._main_next_page,
+        #     },
+        #     "上一頁": {
+        #         "alias": [
+        #             "last",
+        #             "l",
+        #         ],
+        #         "call": self._main_last_page,
+        #     },
+        #     "儲存": {
+        #         "alias": [
+        #             "save",
+        #         ],
+        #         "call": self._main_save,
+        #     },
+        #     "進階儲存": {
+        #         "alias": ["advance-save", "asave"],
+        #         "call": self.advance_save,
+        #     },
+        # }
+        actions: list[PPBTUIAction] = [
+            PPBTUIAction("新增", ["add", "a"], self.insert_appdata),
+            PPBTUIAction(
+                "刪除",
+                [
+                    "delete",
+                    "d",
+                ],
+                self.delete_appdata,
+            ),
+            PPBTUIAction(
+                "離開",
+                [
+                    "quit",
+                    "q",
+                ],
+            ),
+            PPBTUIAction(
+                "重新整理",
+                [
+                    "refresh",
+                    "r",
+                ],
+                self._main_refresh,
+            ),
+            PPBTUIAction(
+                "關於",
+                [
+                    "about",
+                ],
+                self.about_page,
+            ),
+            PPBTUIAction(
+                "下一頁",
+                [
+                    "next",
+                    "n",
+                ],
+                self._main_next_page,
+            ),
+            PPBTUIAction(
+                "上一頁",
+                [
+                    "last",
+                    "l",
+                ],
+                self._main_last_page,
+            ),
+            PPBTUIAction(
+                "儲存",
+                [
+                    "save",
+                ],
+                self._main_save,
+            ),
+            PPBTUIAction(
+                "進階儲存",
+                ["advance-save", "asave"],
+                self.advance_save,
+            ),
         ]
+        all_actions = []
+        for action in actions:
+            all_actions.append(action.name)
+            all_actions.extend(action.alias)
         self.console.clear()
         while True:
             while True:
@@ -715,12 +856,12 @@ class PasswordBook:
                     self.console.print(
                         "輸入錯誤：請選擇一個有效的動作！",
                         style=Style(
-                            blink=True, underline=True, color="red"
+                            underline=True, color="red", bold=True
                         ),
                     )
                     is_user_input_error = False
                 prompt = Text("輸入動作") + Text(
-                    "〔新增, 刪除, 離開, 重新整理, 關於, 下一頁, 上一頁, 儲存〕",
+                    f"〔{', '.join([action.name for action in actions])}〕",
                     style=Style(color="bright_magenta"),
                 )
                 try:
@@ -733,16 +874,13 @@ class PasswordBook:
                     is_user_input_error = True
                     self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
                 else:
+                    self.logger.debug(f"使用者輸入：「{user_action}」")
                     break
-            if user_action not in actions:
+            if user_action not in all_actions:
                 is_user_input_error = True
                 self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
             else:
-                if user_action in ["新增", "add", "a"]:
-                    self.insert_appdata()
-                elif user_action in ["刪除", "delete", "d"]:
-                    self.delete_appdata()
-                elif user_action in ["離開", "quit", "q"]:
+                if user_action in ["離開", "quit", "q"]:
                     break
                 elif user_action in ["重新整理", "refresh", "r"]:
                     self.get_backend_data()
@@ -759,31 +897,69 @@ class PasswordBook:
                         f"已儲存到檔案：「{self.data_file_path}」"
                     )
                 else:
-                    is_user_input_error = True
-                    self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
+                    for action in actions:
+                        if (
+                            user_action == action.name
+                            or user_action in action.alias
+                        ):
+                            act_call = action.call
+                            if isinstance(act_call, Callable):
+                                act_call()
+                                break
+                            else:
+                                is_user_input_error = True
+                                self.logger.warning("錯誤/unknown-err")
+                    else:
+                        is_user_input_error = True
+                        self.logger.warning(
+                            "輸入錯誤：請選擇一個有效的動作！"
+                        )
         self.close()
 
+    def _main_refresh(self):
+        self.get_backend_data()
+        self.refresh_page()
+        self.logger.info("已重新整理。")
+
+    def _main_save(self):
+        self.backend_save_data()
+        self.logger.info(f"已儲存到檔案：「{self.data_file_path}」。")
+
+    def _main_next_page(self):
+        self.next_page()
+        self.logger.info(
+            f"已切換到下一頁 ({self.page_num} / {self.page_max_num}) 。"
+        )
+
+    def _main_last_page(self):
+        self.last_page()
+        self.logger.info(
+            f"已切換到上一頁 ({self.page_num} / {self.page_max_num}) 。"
+        )
+
     def __str__(self) -> str:
-        return f"""PasswordBook(
-    pages={self.pages},
-    page_num={self.page_num},
-    page_max_num={self.page_max_num},
-    content_per_page={self.content_per_page},
-    data={self.data},
-    data_file_path={self.data_file_path},
-    backend={self.backend}
-)"""
+        return f"""
+PasswordBook
+    .pages={self.pages},
+    .page_num={self.page_num},
+    .page_max_num={self.page_max_num},
+    .content_per_page={self.content_per_page},
+    .data={self.data},
+    .data_file_path={self.data_file_path},
+    .data_backend={self.data_backend}
+"""
 
     def __repr__(self) -> str:
-        return f"""PasswordBook(
-    pages={self.pages},
-    page_num={self.page_num},
-    page_max_num={self.page_max_num},
-    content_per_page={self.content_per_page},
-    data={self.data},
-    data_file_path={self.data_file_path},
-    backend={self.backend}
-)"""
+        return f"""
+PasswordBook
+    .pages={self.pages},
+    .page_num={self.page_num},
+    .page_max_num={self.page_max_num},
+    .content_per_page={self.content_per_page},
+    .data={self.data},
+    .data_file_path={self.data_file_path},
+    .data_backend={self.data_backend}
+"""
 
 
 def main(logger, version):
@@ -791,7 +967,6 @@ def main(logger, version):
 
 
 def launch():
-    # TODO:待改成ppb_launcher或launch_tui統一啟動
     import datetime
     import os
 
@@ -802,7 +977,7 @@ def launch():
     time_format_str = time_now.strftime("%Y-%d-%m_%H-%M-%S")
     log_file_path = os.path.join(log_dir, f"log_{time_format_str}.log")
     logger = pt.build_logger(log_file_path, f"{project_name}_logger")
-    main(logger, project_infos["version"])
+    main(logger, project_infos.project_version)
 
 
 if __name__ == "__main__":

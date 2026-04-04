@@ -1,4 +1,4 @@
-name: commit-build-tui
+name: commit-build-full
 
 permissions:
   contents: write
@@ -34,10 +34,10 @@ jobs:
         run: uv venv
 
       - name: Install project dependencies with uv
-        run: uv sync --extra build --extra feature_encrypt
+        run: uv sync --all-extras
 
       - name: Build executable with pyinstaller
-        run: uv run pyinstaller ppb_tui.spec
+        run: uv run pyinstaller ppb_full.spec
 
       - name: Prepare CI Venv (Linux)
         if: runner.os == 'Linux'
@@ -159,7 +159,7 @@ jobs:
         if: runner.os == 'Linux'
         with:
           name: ${{ steps.rename_exe_linux.outputs.exe_path }}
-          path: dist/
+          path: dist/*
 
       # - name: Get datetime (Linux)
       #   id: get_datetime_linux
@@ -280,10 +280,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo '----create_release----'
-          gh release create "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui" \
-            --title "ci-PPB_tui_pre-${{ steps.get_version.outputs.version }}+${{ steps.get_datetime.outputs.datetime }} (${{ github.sha }})" \
-            --notes "**這是使用Github Action製作的TUI測試版**
+          gh release create "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-full" \
+            --title "ci-PPB_full_pre-${{ steps.get_version.outputs.version }}+${{ steps.get_datetime.outputs.datetime }} (${{ github.sha }})" \
+            --notes "**這是使用Github Action製作的測試版**
             - 版本： ${{ steps.get_version.outputs.version }}
+            - 製作類型： full
             - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}
             - github_sha： ${{ github.sha }}" \
             --prerelease \
@@ -293,7 +294,7 @@ jobs:
             ```
           echo '----Get Upload Url----'
           upload_url_base=$(gh api \
-            repos/{owner}/{repo}/releases/tags/ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-tui \
+            repos/{owner}/{repo}/releases/tags/ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-full \
             --jq '.upload_url')
           echo 'upload_url_base=$upload_url_base'
           echo '----upload----'

@@ -5,6 +5,11 @@ permissions:
 
 on:
   push:
+    path-ignores: 
+      - 'README.md'
+      - 'READMEs/**'
+      - '.vscode/**'
+      - 'TODO.md'
 
 jobs:
   build_exec:
@@ -29,7 +34,7 @@ jobs:
         run: uv venv
 
       - name: Install project dependencies with uv
-        run: uv sync --extra gui --extra build
+        run: uv sync --extra gui --extra build --extra feature_encrypt
 
       - name: Build executable with pyinstaller
         run: uv run pyinstaller ppb_gui.spec
@@ -143,17 +148,17 @@ jobs:
           cd ..
 
       - name: Upload exe artifact (Windows)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: runner.os == 'Windows'
         with:
-          name: positive_password_book_launch_gui_${{ matrix.python }}.exe
+          name: ${{ steps.rename_exe_windows.outputs.exe_path }}
           path: dist/*
 
       - name: Upload exe artifact (Linux)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: runner.os == 'Linux'
         with:
-          name: positive_password_book_launch_gui_${{ matrix.python }}
+          name: ${{ steps.rename_exe_linux.outputs.exe_path }}
           path: dist/*
 
       # - name: Get datetime (Linux)
@@ -256,20 +261,22 @@ jobs:
           echo '--------'
           ls -la artifacts
 
-      - name: Create Prerelease via GitHub CLI
+      - name: Prerelease
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo '----create_release----'
           gh release create "ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-gui" \
-            --title "ci-PPB_gui_pre-release+${{ steps.get_version_linux.outputs.version }}+${{ steps.get_datetime.outputs.datetime }} (${{ github.sha }})" \
+            --title "ci_PPB-gui_pre-${{ steps.get_version.outputs.version }}+${{ steps.get_datetime.outputs.datetime }} (${{ github.sha }})" \
             --notes "**這是使用Github Action製作的GUI測試版**
             - 版本： ${{ steps.get_version.outputs.version }}
             - 臺北時間： ${{ steps.get_datetime.outputs.datetime }}
-            > UTC時間：臺北時間-8 
             - github_sha： ${{ github.sha }}" \
             --prerelease \
-            --repo="${{ github.repository }}"
+            --repo="${{ github.repository }}" \
+            ``` \
+            ${{ github.event.head_commit.message }} \
+            ```
           echo '----Get Upload Url----'
           upload_url_base=$(gh api \
             repos/{owner}/{repo}/releases/tags/ci-pre-v${{ steps.get_version.outputs.version }}-${{ github.sha }}-gui \

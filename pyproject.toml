@@ -1,19 +1,17 @@
 [project]
 name = "positive-password-book"
-version = "0.3.0"
+version = "0.4.1"
 license = "AGPL-3.0-only"
-description = "一個密碼本"
+description = ""
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "positive-tool>=0.6.0",
-    "typer~=0.20.1",
-]
+dependencies = ["positive-tool~=0.6.0", "typer~=0.20.1", "rich>=14.2.0"]
 
 [project.optional-dependencies]
-tui = ["rich>=14.2.0"]
 gui = ["pyside6>=6.10.1"]
 build = ["pyinstaller>=6.17.0"]
+check = ["mypy>=1.19.1", "ruff>=0.14.14", "ty>=0.0.14"]
+feature_encrypt = ["cryptography~=46.0.4"]
 
 [project.urls]
 Homepage = "https://github.com/TW0hank0/positive_password_book/"
@@ -29,20 +27,15 @@ build-backend = "setuptools.build_meta"
 [project.scripts]
 ppb = "ppb.ppb_launcher.launcher:launch"
 ppb_tui = "ppb.ppb_launcher.launcher:launch_tui"
+ppb_gui = "ppb.ppb_launcher.launcher:launch_gui"
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
 exclude = [
-    ".bzr",
-    ".direnv",
     ".eggs",
     ".git",
     ".git-rewrite",
-    ".hg",
-    ".ipynb_checkpoints",
     ".mypy_cache",
-    ".nox",
-    ".pants.d",
     ".pyenv",
     ".pytest_cache",
     ".pytype",
@@ -57,10 +50,7 @@ exclude = [
     "site-packages",
     "change_log",
     ".logs",
-    ".godot",
-    "exports",
-    "addons",
-    "fonts",
+    "assets",
 ]
 line-length = 75
 indent-width = 4

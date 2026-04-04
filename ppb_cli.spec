@@ -2,10 +2,10 @@
 
 
 a = Analysis(
-    ['launch_gui.py'],
+    ['launch_cli.py'],
     pathex=[],
     binaries=[],
-    datas=[('pyproject.toml', '.'), ('LICENSE', '.'), ('icon.png', '.'), ('assets', '.')],
+    datas=[('pyproject.toml', '.'), ('LICENSE', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='ppb_gui',
+    name='ppb_cli',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -35,5 +35,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='icon.ico'
 )
