@@ -2,10 +2,6 @@
 
 **中文** | [English](READMEs/README_en.md)
 
-最後更改：
-
-2026-1-25
-
 ## 使用
 
 ### TUI
@@ -20,8 +16,5 @@ git clone https://github.com/TW0hank0/positive_password_book.git
 ```
 uv venv
 uv sync --extra tui
-uv run launch_tui.py
+uv run -m src.ppb.ppb_tui
 ```
-
-## 協議
-AGPL-3.0協議

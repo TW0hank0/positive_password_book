@@ -1,28 +1,25 @@
 import json
-import time
+import logging
 import os
 import sys
-import logging
-
-from typing import Literal, Any
-
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-from rich.style import Style
-from rich.text import Text
-from rich.prompt import Prompt, PromptBase, Confirm
-from rich.rule import Rule
-from rich.layout import Layout
-from rich.tree import Tree
-from rich.containers import Renderables
-
+import time
+from typing import Any, Literal
 
 from positive_tool import pt
-from positive_tool.arg import ArgType
+from positive_tool.verify import ArgType
+from rich.console import Console
+from rich.containers import Renderables
+from rich.layout import Layout
+from rich.panel import Panel
+from rich.prompt import Confirm, Prompt, PromptBase
+from rich.rule import Rule
+from rich.style import Style
+from rich.table import Table
+from rich.text import Text
+from rich.tree import Tree
 
-from ..ppb_backend import ppb_backend
 from ...ppb.project_infos import project_infos
+from ..ppb_backend import ppb_backend
 
 project_name: str = project_infos["project_name"]
 license_file_path = project_infos["project_license_file_path"]
@@ -97,7 +94,9 @@ class PPBLogHandler(logging.Handler):
         for log in recent_logs:
             # 根據日誌等級設置顏色
             if "CRITICAL" in log:
-                log_text = Text(log, style=Style(color="bright_red", bold=True))
+                log_text = Text(
+                    log, style=Style(color="bright_red", bold=True)
+                )
             elif "ERROR" in log:
                 log_text = Text(log, style=Style(color="bright_red"))
             elif "WARNING" in log:
@@ -141,7 +140,8 @@ class PPBSetting:  # TODO: 待轉成GUI、TUI通用，移到ppb_backend
             os.path.exists(self.setting_file_path) is True
             and os.path.isfile(self.setting_file_path) is True
             and (
-                self._bytes_to_mb(os.path.getsize(self.setting_file_path)) < 10
+                self._bytes_to_mb(os.path.getsize(self.setting_file_path))
+                < 10
             )  # 確保檔案不會過大
         ):
             with open(self.setting_file_path, "r", encoding="utf-8") as f:
@@ -156,9 +156,9 @@ class PPBSetting:  # TODO: 待轉成GUI、TUI通用，移到ppb_backend
             return None
 
     def setting_auto(self):
-        if os.path.exists(self.setting_file_path) is True and os.path.isfile(
+        if os.path.exists(
             self.setting_file_path
-        ):
+        ) is True and os.path.isfile(self.setting_file_path):
             self.setting_load()
         else:
             self.setting_save()
@@ -258,10 +258,14 @@ class PasswordBook:
         #
         table = Table()
         header_style = Style(color="blue")
-        table.add_column("應用程式", min_width=10, header_style=header_style)
+        table.add_column(
+            "應用程式", min_width=10, header_style=header_style
+        )
         table.add_column("帳號", min_width=20, header_style=header_style)
         table.add_column("密碼", min_width=20, header_style=header_style)
-        table.add_column("user_note", header_style=header_style, min_width=10)
+        table.add_column(
+            "user_note", header_style=header_style, min_width=10
+        )
         table.add_column("note", header_style=header_style, min_width=10)
         if len(self.pages) > 0 and self.page_max_num > 0:
             for app, app_data in self.pages[self.page_num - 1]:
@@ -340,7 +344,9 @@ class PasswordBook:
         infos = Renderables([page_info])
         #
         if len(self.pages) > 0 and self.page_max_num > 0:
-            tree = Tree("資料", style=Style(color="bright_blue", bold=True))
+            tree = Tree(
+                "資料", style=Style(color="bright_blue", bold=True)
+            )
             for app, app_data in self.pages[self.page_num - 1]:
                 self.logger.debug(f"app:{app}, app_data:{app_data}")
                 if app == "trash_can":
@@ -414,7 +420,9 @@ class PasswordBook:
                 self.logger.debug(f"page： {page}")
                 if (count + 5 + 5) >= self.content_per_page:
                     self.pages.append(page.copy())
-                    self.logger.debug(f"pages -> self.pages： {self.pages}")
+                    self.logger.debug(
+                        f"pages -> self.pages： {self.pages}"
+                    )
                     page.clear()
                     count = pt.UInt(1)
                 else:
@@ -454,10 +462,14 @@ class PasswordBook:
         tree = Tree(app_name, style=key_style)
         tree.add("帳號：", style=key_style).add(acc, style=value_style)
         tree.add("密碼：", style=key_style).add(pwd, style=value_style)
-        tree.add("筆記：", style=key_style).add(usernote, style=value_style)
+        tree.add("筆記：", style=key_style).add(
+            usernote, style=value_style
+        )
         self.console.print(tree)
         if Confirm.ask("是否正確： ", console=self.console) is True:
-            self.backend.password_book_insert(app_name, acc, pwd, user_note=usernote)
+            self.backend.password_book_insert(
+                app_name, acc, pwd, user_note=usernote
+            )
             self.logger.info(
                 f"新增：應用程式「{app_name}」、帳號「{acc}」、密碼「{pwd}」、筆記「{usernote}」。"
             )
@@ -545,7 +557,9 @@ class PasswordBook:
         if acc is None:
             if app != "trash_can" and app in list(self.data.keys()):
                 for i in self.data[app]:
-                    var_app_data.append((i["acc"], i["pwd"], i["note"], i["usernote"]))
+                    var_app_data.append(
+                        (i["acc"], i["pwd"], i["note"], i["usernote"])
+                    )
                     break
             else:
                 msg = "找不到應用程式/帳號"
@@ -575,20 +589,27 @@ class PasswordBook:
         #
         key_style = Style(color="blue")
         value_style = Style(color="yellow")
-        tree = Tree(Text("應用程式：", style=key_style) + Text(app, style=value_style))
+        tree = Tree(
+            Text("應用程式：", style=key_style)
+            + Text(app, style=value_style)
+        )
         for acc, pwd, note, usernote in var_app_data:
             if self.setting["acc_tree__tree_type"] == "same_line":
                 tree_acc = tree.add(
-                    Text("帳號：", style=key_style) + Text(acc, style=value_style)
+                    Text("帳號：", style=key_style)
+                    + Text(acc, style=value_style)
                 )
                 tree_acc.add(
-                    Text("密碼：", style=key_style) + Text(pwd, style=value_style)
+                    Text("密碼：", style=key_style)
+                    + Text(pwd, style=value_style)
                 )
                 tree_acc.add(
-                    Text("紀錄：", style=key_style) + Text(note, style=value_style)
+                    Text("紀錄：", style=key_style)
+                    + Text(note, style=value_style)
                 )
                 tree_acc.add(
-                    Text("筆記：", style=key_style) + Text(usernote, style=value_style)
+                    Text("筆記：", style=key_style)
+                    + Text(usernote, style=value_style)
                 )
             elif (
                 self.setting["acc_tree__tree_type"] == "new_line"
@@ -596,7 +617,9 @@ class PasswordBook:
             ):
                 tree_acc_key = tree.add("帳號", style=key_style)
                 tree_acc_value = tree_acc_key.add(acc, style=value_style)
-                tree_acc_value.add("密碼", style=key_style).add(pwd, style=value_style)
+                tree_acc_value.add("密碼", style=key_style).add(
+                    pwd, style=value_style
+                )
         return tree
 
     def about_page(self) -> None:
@@ -613,7 +636,9 @@ class PasswordBook:
         )
         project_repo = Text(
             "專案Github Repo：https://github.com/TW0hank0/positive_password_book",
-            style=Style(link="https://github.com/TW0hank0/positive_password_book"),
+            style=Style(
+                link="https://github.com/TW0hank0/positive_password_book"
+            ),
         )
         contents = Renderables(
             [
@@ -642,7 +667,9 @@ class PasswordBook:
         if (self.page_num + 1) <= self.page_max_num:
             self.page_num += 1
         else:
-            self.logger.warning(f"已到最後一頁！總頁數：{self.page_max_num}")
+            self.logger.warning(
+                f"已到最後一頁！總頁數：{self.page_max_num}"
+            )
 
     def last_page(self):
         if (self.page_num - 1) >= 1:
@@ -651,7 +678,9 @@ class PasswordBook:
             self.logger.warning("已是第一頁！")
 
     def main(self):
-        self.console.print("\n" * self.console.size.height)  # 防止覆蓋之前的內容
+        self.console.print(
+            "\n" * self.console.size.height
+        )  # 防止覆蓋之前的內容
         is_user_input_error = False
         actions = [
             "新增",
@@ -685,7 +714,9 @@ class PasswordBook:
                 if is_user_input_error is True:
                     self.console.print(
                         "輸入錯誤：請選擇一個有效的動作！",
-                        style=Style(blink=True, underline=True, color="red"),
+                        style=Style(
+                            blink=True, underline=True, color="red"
+                        ),
                     )
                     is_user_input_error = False
                 prompt = Text("輸入動作") + Text(
@@ -724,7 +755,9 @@ class PasswordBook:
                     self.last_page()
                 elif user_action in ["儲存", "save"]:
                     self.backend_save_data()
-                    self.logger.info(f"已儲存到檔案：「{self.data_file_path}」")
+                    self.logger.info(
+                        f"已儲存到檔案：「{self.data_file_path}」"
+                    )
                 else:
                     is_user_input_error = True
                     self.logger.warning("輸入錯誤：請選擇一個有效的動作！")
@@ -757,10 +790,10 @@ def main(logger, version):
     PasswordBook(logger, version)
 
 
-def launcher():
+def launch():
     # TODO:待改成ppb_launcher或launch_tui統一啟動
-    import os
     import datetime
+    import os
 
     log_dir = os.path.join(project_path, ".logs")
     if os.path.exists(log_dir) is False or os.path.isdir(log_dir) is False:
@@ -773,4 +806,4 @@ def launcher():
 
 
 if __name__ == "__main__":
-    launcher()
+    launch()
